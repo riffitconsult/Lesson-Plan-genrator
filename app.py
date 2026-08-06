@@ -83,10 +83,12 @@ if st.button("🚀 Generate Lesson Plan", type="primary"):
                 6. Phase 3: Plenary / Assessment Questions
                 """
 
+               # Call Gemini API
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-3.6-flash',
                     contents=prompt
                 )
+    
                 
                 plan_text = response.text
                 st.success("✅ Lesson Plan Generated!")
