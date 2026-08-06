@@ -193,7 +193,7 @@ if st.button("🚀 Generate Lesson Plan Table", type="primary"):
 
                 # Calling Gemini API
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-3.6-flash',
                     contents=prompt
                 )
                 
