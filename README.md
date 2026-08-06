@@ -1,1 +1,1 @@
-# Lesson-Plan-genrator
+# Lesson-Plan-generator
