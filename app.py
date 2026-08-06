@@ -3,7 +3,7 @@ from google import genai
 from docx import Document
 import io
 
-# Try importing WeasyPrint for PDF export; handle if missing during setup
+# Try importing WeasyPrint for PDF export
 try:
     from weasyprint import HTML
     PDF_SUPPORT = True
@@ -28,10 +28,10 @@ with st.sidebar:
     
     st.divider()
     st.markdown("### Features")
-    st.markdown("- Supports **Basic 1-6** & **Basic 7-9 (JHS)** layouts")
-    st.markdown("- Flexible number of weekly lessons (2 to 5 days)")
-    st.markdown("- Customizable durations (30m, 45m, 60m, 100m)")
-    st.markdown("- Export directly to **PDF Table** or **Word Document**")
+    st.markdown("- **Dynamic Dropdowns:** Strands & Sub-strands auto-adjust per subject")
+    st.markdown("- **Smart AI Generation:** TLMs & Core Competencies generated automatically")
+    st.markdown("- **Custom Days:** Pick specific teaching days (Mon, Wed, Fri)")
+    st.markdown("- **Export Formats:** Download directly as PDF Table or Word document")
 
 # Helper function to generate Word document
 def create_docx(text, title):
@@ -59,82 +59,139 @@ def create_pdf(html_code):
     buffer.seek(0)
     return buffer
 
-# 3. Form Inputs
+# 3. Curriculum Data Dictionary for Dependent Dropdowns
+CURRICULUM_DATA = {
+    "Mathematics": {
+        "Number": ["Whole Numbers, Place Value & Operations", "Fractions, Decimals & Percentages", "Ratios & Proportions"],
+        "Algebra": ["Patterns & Relationships", "Algebraic Expressions & Equations"],
+        "Geometry & Measurement": ["Lines, Shapes & 3D Objects", "Position & Transformation", "Perimeter, Area & Volume"],
+        "Data & Probability": ["Data Collection & Presentation", "Data Analysis & Probability"]
+    },
+    "Science": {
+        "Diversity of Matter": ["Living and Non-Living Things", "Materials & Mixtures", "States of Matter"],
+        "Cycles": ["Earth Science & Weather", "Life Cycles of Organisms", "Solar System"],
+        "Systems": ["Human Body Systems", "Plant Systems", "Ecosystems"],
+        "Forces and Energy": ["Sources & Forms of Energy", "Forces & Motion", "Electricity & Magnetism"],
+        "Humans and the Environment": ["Personal Hygiene & Sanitation", "Diseases & Climate Change", "Soil & Agriculture"]
+    },
+    "English Language": {
+        "Oral Language": ["Listening & Speaking", "Pronunciation & Intonation", "Storytelling & Poems"],
+        "Reading": ["Phonics & Vocabulary", "Comprehension Strategies", "Silent Reading"],
+        "Writing": ["Penmanship & Sentence Structure", "Composition & Creative Writing", "Grammar & Usage"],
+        "Literature": ["Folktales, Plays & Poetry Analysis"]
+    },
+    "Social Studies": {
+        "Environment": ["Our Physical & Social Environment", "Map Work & Directions"],
+        "Family & Community": ["Roles in Family & Community", "Governance & Citizenship"],
+        "Sense of Purpose": ["Culture & National Identity", "Socializing & Values"]
+    },
+    "Computing": {
+        "Introduction to Computing": ["Hardware & Peripheral Devices", "Operating Systems & Software"],
+        "Presentation & Word Processing": ["Editing Documents", "Formatting Text & Tables"],
+        "Internet & Communication": ["Web Browsing & E-Safety", "Emails & Online Tools"],
+        "Programming & Databases": ["Basic Coding Concepts", "Algorithms & Flowcharts"]
+    },
+    "Creative Arts": {
+        "Visual Arts": ["Drawing, Painting & Design", "Crafts & Sculpture"],
+        "Performing Arts": ["Music, Dance & Drama Performances"]
+    }
+}
+
+# Standard Indicator Mapping based on selected class
+CLASS_LEVELS = ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6", "Basic 7 (JHS 1)", "Basic 8 (JHS 2)", "Basic 9 (JHS 3)"]
+
+# Form Layout
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    class_level = st.selectbox(
-        "Class Level", 
-        ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6", "Basic 7 (JHS 1)", "Basic 8 (JHS 2)", "Basic 9 (JHS 3)"]
-    )
-    subject = st.selectbox(
-        "Subject", 
-        ["Mathematics", "English Language", "Science", "Social Studies", "Computing", "Creative Arts", "Career Technology", "RME"]
-    )
-    strand = st.text_input("Strand", placeholder="e.g., Diversity of Matter / Number")
+    class_level = st.selectbox("Class Level", CLASS_LEVELS)
+    subject = st.selectbox("Subject", list(CURRICULUM_DATA.keys()))
+    
+    # Dependent Strand dropdown based on Subject
+    available_strands = list(CURRICULUM_DATA[subject].keys())
+    strand = st.selectbox("Strand", available_strands)
 
 with col2:
-    sub_strand = st.text_input("Sub-Strand", placeholder="e.g., Mixtures / Fractions")
-    content_standard = st.text_input("Content Standard Code", placeholder="e.g., B8.1.1.1 or B4.1.1.1")
-    indicator_code = st.text_input("Indicator Code", placeholder="e.g., B8.1.1.1.1")
+    # Dependent Sub-strand dropdown based on Strand
+    available_substrands = CURRICULUM_DATA[subject][strand]
+    sub_strand = st.selectbox("Sub-Strand", available_substrands)
+    
+    # Class code prefix extraction (e.g. Basic 4 -> B4)
+    code_prefix = "B" + class_level.split(" ")[1] if "Basic" in class_level else "B7"
+    
+    content_standard = st.selectbox(
+        "Content Standard Code", 
+        [f"{code_prefix}.1.1", f"{code_prefix}.1.2", f"{code_prefix}.2.1", f"{code_prefix}.2.2", f"{code_prefix}.3.1"]
+    )
+    
+    indicator_code = st.selectbox(
+        "Indicator Code", 
+        [f"{content_standard}.1", f"{content_standard}.2", f"{content_standard}.3"]
+    )
 
 with col3:
-    num_lessons = st.selectbox("Number of Lessons / Days this week", ["2 Lessons", "3 Lessons", "4 Lessons", "5 Lessons (Mon-Fri)"])
-    duration = st.selectbox("Duration per Lesson", ["30 mins", "45 mins", "60 mins", "70 mins", "90 mins", "100 mins (Double Period)"])
-    class_size = st.text_input("Class Size (Optional)", placeholder="e.g., 45 pupils")
+    # Selected teaching days
+    selected_days = st.multiselect(
+        "Teaching Days (Pick days for this week)",
+        ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+        default=["Monday", "Wednesday", "Friday"]
+    )
+    
+    duration = st.selectbox("Duration per Session", ["30 mins", "45 mins", "60 mins", "70 mins", "90 mins", "100 mins (Double Period)"])
+    class_size = st.text_input("Class Size (Optional)", value="40 pupils")
 
-topic = st.text_area("Lesson Topic & Learning Objectives", placeholder="e.g., Identify types of mixtures by name and characteristics.")
+topic = st.text_area("Lesson Topic & Specific Learning Objectives", placeholder="e.g., Identify equivalent fractions using paper folding activities.")
 
-# Resources & Core Competencies
-col_res1, col_res2 = st.columns(2)
-with col_res1:
-    resources = st.text_input("Teaching & Learning Resources (TLMs)", placeholder="e.g., Salt, water, glass containers, charts")
-with col_res2:
-    core_competencies = st.text_input("Core Competencies", placeholder="e.g., Critical Thinking, Collaboration, Communication, Digital Literacy")
-
-# 4. Action Button & API Call
+# 4. Action Button & Execution
 if st.button("🚀 Generate Lesson Plan Table", type="primary"):
     if not api_key:
         st.error("⚠️ Please enter your Gemini API Key in the sidebar.")
-    elif not topic or not strand:
-        st.warning("⚠️ Please fill in at least the Topic and Strand.")
+    elif not topic:
+        st.warning("⚠️ Please fill in the Lesson Topic & Learning Objectives.")
+    elif len(selected_days) == 0:
+        st.warning("⚠️ Please select at least one teaching day.")
     else:
-        with st.spinner("Building your weekly lesson plan tables..."):
+        with st.spinner("Analyzing curriculum standards and writing your lesson plan..."):
             try:
                 client = genai.Client(api_key=api_key)
                 
-                # Dynamic system instructions enforcing HTML table output matching Ghanaian NaCCA standards
+                days_list_str = ", ".join(selected_days)
+                num_lessons = len(selected_days)
+                
+                # Dynamic system prompt forcing Gemini to infer TLMs, Core Competencies, and format table across chosen days
                 prompt = f"""
                 You are an expert curriculum developer specializing in the Ghanaian NaCCA standard curriculum.
-                Generate a complete, professionally formatted weekly lesson plan inside a single self-contained HTML file (using styled <table> tags).
+                Generate a complete, professionally formatted weekly lesson plan inside a single self-contained HTML document using styled <table> tags.
 
                 INPUT DETAILS:
                 - Class Level: {class_level}
                 - Subject: {subject}
                 - Strand: {strand}
                 - Sub-Strand: {sub_strand}
-                - Content Standard: {content_standard}
+                - Content Standard Code: {content_standard}
                 - Indicator Code: {indicator_code}
                 - Duration per Lesson: {duration}
-                - Number of Lessons/Days: {num_lessons}
+                - Specified Teaching Days: {days_list_str} (Total: {num_lessons} Lessons)
                 - Class Size: {class_size}
-                - Topic Details: {topic}
-                - TLMs / Resources: {resources}
-                - Core Competencies: {core_competencies}
+                - Topic Details & Objectives: {topic}
+
+                SPECIAL INSTRUCTION FOR AI INFERENCE:
+                1. AUTOMATICALLY GENERATE appropriate Teaching & Learning Materials (TLMs) suited for a Ghanaian classroom based on the topic.
+                2. AUTOMATICALLY GENERATE relevant NaCCA Core Competencies (e.g., Critical Thinking, Collaboration, Communication, Digital Literacy) aligned with the objectives.
 
                 OUTPUT FORMAT RULES:
                 1. Return ONLY pure HTML code inside an <html><body> tag. Do NOT wrap it in Markdown code blocks (no ```html).
                 2. Include CSS styling for clean, professional PDF printing (border-collapse, clean blue header banner `#1a365d`, padding, clear borders `#cbd5e0`, A4 page layout).
-                3. Top Metadata Table: Include Subject, Class, Strand, Sub-strand, Duration, Indicator, Performance Indicator, Core Competencies, and TLMs.
-                4. Schedule Table: Generate exactly {num_lessons} separate lesson sections (e.g., Day 1/Lesson 1, Day 2/Lesson 2 up to the requested number of lessons).
-                5. Structure each lesson into 3 mandatory NaCCA phases:
-                   - PHASE 1: STARTER (Preparing the brain / revision)
-                   - PHASE 2: NEW LEARNING / MAIN (Step-by-step learner activities & group tasks + assessment questions)
+                3. Top Header Metadata Table: Include Subject, Class, Strand, Sub-strand, Duration, Content Standard, Indicator Code, Core Competencies, and TLMs.
+                4. Schedule Table: Generate exactly {num_lessons} separate lesson sections corresponding to the selected days: {days_list_str}.
+                5. Structure each day's lesson into the 3 mandatory NaCCA phases:
+                   - PHASE 1: STARTER (Preparing the brain / revision - 10 mins)
+                   - PHASE 2: NEW LEARNING / MAIN (Step-by-step learner activities, group work, and inline assessment questions)
                    - PHASE 3: REFLECTION / PLENARY (Learner feedback & summary)
                 6. Add a Teacher Evaluation & Remarks box at the bottom.
                 """
 
-                # Calling Gemini API using gemini-2.5-flash
+                # Calling Gemini API
                 response = client.models.generate_content(
                     model='gemini-2.5-flash',
                     contents=prompt
@@ -142,12 +199,12 @@ if st.button("🚀 Generate Lesson Plan Table", type="primary"):
                 
                 raw_html = response.text.replace("```html", "").replace("```", "").strip()
                 
-                st.success("✅ Lesson Plan Generated Successfully!")
+                st.success(f"✅ Generated {num_lessons}-Day Lesson Plan ({days_list_str}) Successfully!")
                 
                 # Render the clean HTML table view directly in Streamlit
                 st.components.v1.html(raw_html, height=800, scrolling=True)
                 
-                # Export Options
+                # Download Buttons
                 col_down1, col_down2 = st.columns(2)
                 
                 with col_down1:
@@ -160,10 +217,9 @@ if st.button("🚀 Generate Lesson Plan Table", type="primary"):
                             mime="application/pdf"
                         )
                     else:
-                        st.warning("PDF engine loading... Please click Word Download below.")
+                        st.warning("PDF engine loading... Please use Word download below.")
 
                 with col_down2:
-                    # Provide Word export
                     docx_file = create_docx(topic, f"{subject} - {topic} Lesson Plan")
                     st.download_button(
                         label="📥 Download Word Document (.docx)",
