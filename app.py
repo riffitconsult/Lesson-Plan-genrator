@@ -12,7 +12,7 @@ except Exception:
 
 # 1. Page Configuration
 st.set_page_config(
-    page_title="TeachAI Ghana | Lesson Plan Studio",
+    page_title="My T.A | Lesson Plan Studio",
     page_icon="🎓",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -26,7 +26,7 @@ st.markdown("""
         background-color: #F8FAFC;
     }
     
-    /* TeachAI Hero Banner */
+    /* My T.A Hero Banner */
     .hero-banner {
         background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
         color: white;
@@ -89,7 +89,7 @@ if "authenticated" not in st.session_state:
 if not st.session_state["authenticated"]:
     st.markdown("""
     <div class="hero-banner">
-        <h1>🎓 TeachAI Ghana</h1>
+        <h1>🎓 My T.A</h1>
         <p>Empower your teaching with AI-generated, NaCCA-aligned weekly lesson plans.</p>
     </div>
     """, unsafe_allow_html=True)
@@ -293,7 +293,7 @@ if st.button("🚀 Generate Lesson Plan Table"):
                 """
 
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash',
+                    model='gemini-3.6-flash',
                     contents=prompt
                 )
                 
