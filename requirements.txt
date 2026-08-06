@@ -1,3 +1,7 @@
 streamlit
 google-genai
 python-docx
+streamlit
+google-genai
+python-docx
+weasyprint
