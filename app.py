@@ -273,7 +273,6 @@ with tab_plan:
         else:
             with st.spinner("✨ My T.A. is crafting your NaCCA weekly lesson plan..."):
                 try:
-                    # Initializing Gemini Client with key
                     client = genai.Client(api_key=st.session_state["api_key"])
                     days_list_str = ", ".join(selected_days)
                     num_lessons = len(selected_days)
@@ -312,9 +311,8 @@ with tab_plan:
                     7. Add a Teacher Evaluation & Remarks box at the bottom.
                     """
 
-                    # Primary generation request using Gemini
                     response = client.models.generate_content(
-                        model='gemini-3.6-flash',
+                        model='gemini-2.5-flash',
                         contents=prompt
                     )
                     
@@ -323,14 +321,12 @@ with tab_plan:
                     st.success(f"🎉 Generated {num_lessons}-Day Lesson Plan for {days_list_str}!")
                     st.components.v1.html(raw_html, height=750, scrolling=True)
                     
-                    # Log into session library
                     st.session_state["history"].append({
                         "type": "Lesson Plan",
                         "title": f"{subject} ({class_level})",
                         "date": days_list_str
                     })
                     
-                    # Downloads
                     col_d1, col_d2 = st.columns(2)
                     with col_d1:
                         if PDF_SUPPORT:
@@ -442,4 +438,5 @@ with tab_tlm:
                     
                     st.markdown(tlm_response.text)
                 except Exception as e:
-                    st.error(f"Error: {str(
+                    st.error(f"Error: {str(e)}")
+    
