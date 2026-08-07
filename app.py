@@ -444,4 +444,8 @@ with tab_tlm:
                     """
                     
                     tlm_response = call_gemini_with_retry(client, tlm_prompt)
-       
+                           tlm_response = call_gemini_with_retry(client, tlm_prompt)
+                    st.markdown(tlm_response.text)
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+                    
