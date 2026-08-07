@@ -2,6 +2,7 @@ import streamlit as st
 from google import genai
 from docx import Document
 import io
+import time
 
 # Try importing WeasyPrint for PDF export
 try:
@@ -97,6 +98,22 @@ if "authenticated" not in st.session_state:
     st.session_state["api_key"] = ""
 if "history" not in st.session_state:
     st.session_state["history"] = []
+
+# Helper Function: Robust API Call with Auto-Retry for 503 Spikes
+def call_gemini_with_retry(client, prompt, max_retries=3):
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            return response
+        except Exception as e:
+            if ("503" in str(e) or "UNAVAILABLE" in str(e)) and attempt < max_retries - 1:
+                time.sleep(2)  # Pause 2 seconds before retrying
+                continue
+            else:
+                raise e
 
 # LOGIN SCREEN
 if not st.session_state["authenticated"]:
@@ -311,10 +328,8 @@ with tab_plan:
                     7. Add a Teacher Evaluation & Remarks box at the bottom.
                     """
 
-                    response = client.models.generate_content(
-                        model='gemini-3.6-flash',
-                        contents=prompt
-                    )
+                    # Using auto-retry helper
+                    response = call_gemini_with_retry(client, prompt)
                     
                     raw_html = response.text.replace("```html", "").replace("```", "").strip()
                     
@@ -392,10 +407,7 @@ with tab_diff:
                     (Solutions for quick grading)
                     """
                     
-                    diff_response = client.models.generate_content(
-                        model='gemini-3.6-flash',
-                        contents=diff_prompt
-                    )
+                    diff_response = call_gemini_with_retry(client, diff_prompt)
                     
                     st.markdown(diff_response.text)
                     
@@ -431,12 +443,5 @@ with tab_tlm:
                     3. 🖼️ **AI Visual Prompt for Classroom Chart:** A copyable prompt teachers can use in Canva, Midjourney, or DALL-E to generate a printable chart.
                     """
                     
-                    tlm_response = client.models.generate_content(
-                        model='gemini-3.6-flash',
-                        contents=tlm_prompt
-                    )
-                    
-                    st.markdown(tlm_response.text)
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
-    
+                    tlm_response = call_gemini_with_retry(client, tlm_prompt)
+       
