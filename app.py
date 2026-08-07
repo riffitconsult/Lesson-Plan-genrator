@@ -442,10 +442,9 @@ with tab_tlm:
                     2. 🛠️ **How to Construct/Use Them:** Simple steps for the teacher/pupils.
                     3. 🖼️ **AI Visual Prompt for Classroom Chart:** A copyable prompt teachers can use in Canva, Midjourney, or DALL-E to generate a printable chart.
                     """
-                    
-                    tlm_response = call_gemini_with_retry(client, tlm_prompt)
-                           tlm_response = call_gemini_with_retry(client, tlm_prompt)
+                                        tlm_response = call_gemini_with_retry(client, tlm_prompt)
                     st.markdown(tlm_response.text)
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
+                    
                     
