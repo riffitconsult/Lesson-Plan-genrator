@@ -312,7 +312,7 @@ with tab_plan:
                     """
 
                     response = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-3.6-flash',
                         contents=prompt
                     )
                     
@@ -393,7 +393,7 @@ with tab_diff:
                     """
                     
                     diff_response = client.models.generate_content(
-                        model='gemini-2.5-flash',
+                        model='gemini-3.6-flash',
                         contents=diff_prompt
                     )
                     
