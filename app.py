@@ -199,10 +199,10 @@ def create_pdf(html_code):
     buffer.seek(0)
     return buffer
 
-# Curriculum Data Dictionary
+# Updated Curriculum Data Dictionary with All NaCCA Subjects
 CURRICULUM_DATA = {
     "Mathematics": {
-        "Number": ["Whole Numbers, Place Value & Operations", "Fractions, Decimals & Percentages", "Ratios & Proportions"],
+        "Number": ["Whole Numbers & Place Value", "Number Operations", "Fractions, Decimals & Percentages", "Ratios & Proportions"],
         "Algebra": ["Patterns & Relationships", "Algebraic Expressions & Equations"],
         "Geometry & Measurement": ["Lines, Shapes & 3D Objects", "Position & Transformation", "Perimeter, Area & Volume"],
         "Data & Probability": ["Data Collection & Presentation", "Data Analysis & Probability"]
@@ -211,7 +211,7 @@ CURRICULUM_DATA = {
         "Diversity of Matter": ["Living and Non-Living Things", "Materials & Mixtures", "States of Matter"],
         "Cycles": ["Earth Science & Weather", "Life Cycles of Organisms", "Solar System"],
         "Systems": ["Human Body Systems", "Plant Systems", "Ecosystems"],
-        "Forces and Energy": ["Sources & Forms of Energy", "Forces & Motion", "Electricity & Magnetism"],
+        "Forces and Energy": ["Sources & Forces of Motion", "Electricity & Magnetism", "Forms of Energy"],
         "Humans and the Environment": ["Personal Hygiene & Sanitation", "Diseases & Climate Change", "Soil & Agriculture"]
     },
     "English Language": {
@@ -219,6 +219,30 @@ CURRICULUM_DATA = {
         "Reading": ["Phonics & Vocabulary", "Comprehension Strategies", "Silent Reading"],
         "Writing": ["Penmanship & Sentence Structure", "Composition & Creative Writing", "Grammar & Usage"],
         "Literature": ["Folktales, Plays & Poetry Analysis"]
+    },
+    "French Language": {
+        "Oral Expression & Comprehension": ["Greetings & Self-Introduction", "School & Family Vocabulary", "Daily Activities & Directives"],
+        "Reading Comprehension": ["Simple Texts & Dialogues", "Vocabulary Building"],
+        "Written Expression": ["Short Sentences & Descriptions", "Grammar & Conjugation Basics"]
+    },
+    "Ghanaian Language & Culture": {
+        "Oral Language (Listening & Speaking)": ["Greeting & Customary Manners", "Proverbs, Riddles & Folktales", "Customs & Festival Narratives"],
+        "Reading & Comprehension": ["Local Language Texts & Orthography", "Literary Analysis"],
+        "Writing & Composition": ["Spelling & Grammar Rules", "Creative Writing in Ghanaian Language"],
+        "Culture & Heritage": ["Rites of Passage", "Traditional Governance & Values"]
+    },
+    "Career Technology": {
+        "Health and Safety": ["Personal & Workshop Safety", "Food Hygiene & Environmental Health"],
+        "Materials for Production": ["Complimentary Materials (Wood, Metal, Plastics)", "Food Commodities & Processing", "Sewing Materials & Tools"],
+        "Tools, Equipment & Processes": ["Measuring & Marking Out Tools", "Cutting & Shaping Tools", "Joining & Finishing Techniques"],
+        "Technology & Design": ["Designing & Drawing Skills", "Modeling & Prototyping"],
+        "Entrepreneurship": ["Basic Business Management", "Marketing & Financial Literacy"]
+    },
+    "Religious & Moral Education (RME)": {
+        "God, His Creation and Attributes": ["Attributes of God", "Environment & Stewardship"],
+        "Religious Practices & Worship": ["Islamic, Christian & Traditional Worship Practices", "Religious Festivals"],
+        "Moral Life & Character": ["Honesty, Integrity & Obedience", "Manners & Social Values"],
+        "Social and Cultural Values": ["Family & Community Roles", "Conflict Resolution & Peace"]
     },
     "Social Studies": {
         "Environment": ["Our Physical & Social Environment", "Map Work & Directions"],
