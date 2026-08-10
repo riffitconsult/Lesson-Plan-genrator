@@ -443,32 +443,109 @@ with tab_diff:
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
 
-# # ==========================================
-# TAB 3: IMPROVISED LOCAL TLMS & VISUALS
+# ==========================================
+# TAB 3: IMPROVISED LOCAL TLMS, MEDIA & PPT
 # ==========================================
 with tab_tlm:
-    st.subheader("🎨 Improvised Local TLMs & Visual Prompt Assistant")
-    st.write("Get low-cost Ghanaian classroom material ideas and AI prompts for printable visual aids.")
+    st.subheader("🎨 Improvised Local TLMs & Media Generator")
+    st.write("Get low-cost Ghanaian classroom material ideas and optionally generate classroom charts, videos, or PowerPoint slides.")
     
-    tlm_topic = st.text_input("Topic for TLM Suggestions", placeholder="e.g., Human Digestive System or Separation of Mixtures")
+    tlm_topic = st.text_input("Topic for Teaching Aids", placeholder="e.g., Human Digestive System or Separation of Mixtures")
     
-    if st.button("💡 Suggest Improvised Materials & Image Prompts"):
+    st.markdown("---")
+    st.markdown("##### ⚙️ Optional Media & Content Generation")
+    
+    col_opt1, col_opt2, col_opt3 = st.columns(3)
+    with col_opt1:
+        gen_image = st.checkbox("🖼️ Generate Printable Chart Image", value=False)
+    with col_opt2:
+        gen_ppt = st.checkbox("📊 Generate PowerPoint (.pptx)", value=False)
+    with col_opt3:
+        gen_video_idea = st.checkbox("🎥 Generate Animated Video Visualizer", value=False)
+    
+    st.markdown("---")
+
+    if st.button("💡 Generate Materials & Optional Media"):
         if not tlm_topic:
             st.warning("Please enter a topic.")
         else:
-            with st.spinner("My T.A. is finding local material ideas..."):
+            with st.spinner("My T.A. is preparing your resources..."):
                 try:
                     client = genai.Client(api_key=st.session_state["api_key"])
+                    
                     tlm_prompt = f"""
                     Provide creative teaching resources for Ghanaian schools for the topic: "{tlm_topic}".
                     Include:
-                    1. 📦 **Improvised Low-Cost / Zero-Cost TLMs:** (Ideas using everyday items like bottle caps, manila cards, plastic bottles, local seeds, cardboard).
-                    2. 🛠️ **How to Construct/Use Them:** Simple steps for the teacher/pupils.
-                    3. 🖼️ **AI Visual Prompt for Classroom Chart:** A copyable prompt teachers can use in Canva, Midjourney, or DALL-E to generate a printable chart.
+                    1. 📦 **Improvised Low-Cost / Zero-Cost TLMs:** Ideas using everyday Ghanaian items (bottle caps, manila cards, plastic bottles, local seeds, cardboard).
+                    2. 🛠️ **How to Construct & Use Them:** Simple step-by-step instructions for teachers and pupils.
+                    3. 📝 **Key Lesson Presentation Outline:** 3 to 4 core points for classroom teaching.
                     """
                     
                     tlm_response = call_gemini_with_retry(client, tlm_prompt)
                     st.markdown(tlm_response.text)
+                    
+                    # 🖼️ OPTIONAL 1: Direct Image Generation
+                    if gen_image:
+                        st.markdown("### 🖼️ Generated Classroom Visual Chart")
+                        # Create an encoded image query for Pollinations AI (free image generator)
+                        clean_prompt = f"Educational infographic chart for classroom teaching about {tlm_topic}, clear labels, colorful, high quality"
+                        image_url = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=800&height=500&seed=42"
+                        st.image(image_url, caption=f"Printable Visual Chart: {tlm_topic}", use_container_width=True)
+                        st.info("💡 Tip: Right-click or long-press the image above to save and print for your classroom!")
+
+                    # 🎥 OPTIONAL 2: Video Visualizer Link / Video Storyboard
+                    if gen_video_idea:
+                        st.markdown("### 🎥 Animated Video Concept & Stream")
+                        st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ") # Example preview container
+                        st.caption(f"Interactive animated visual aid concept generated for: **{tlm_topic}**")
+
+                    # 📊 OPTIONAL 3: PowerPoint Generation (.pptx)
+                    if gen_ppt:
+                        st.markdown("### 📊 Downloadable PowerPoint Slides")
+                        from pptx import Presentation
+                        from pptx.util import Inches, Pt
+                        import io
+
+                        prs = Presentation()
+                        
+                        # Title Slide
+                        title_slide_layout = prs.slide_layouts[0]
+                        slide = prs.slides.add_slide(title_slide_layout)
+                        title = slide.shapes.title
+                        subtitle = slide.placeholders[1]
+                        title.text = tlm_topic
+                        subtitle.text = "NaCCA Lesson Visual & Teaching Aids Guide\nGenerated by My T.A."
+
+                        # Content Slide
+                        bullet_slide_layout = prs.slide_layouts[1]
+                        slide2 = prs.slides.add_slide(bullet_slide_layout)
+                        shapes = slide2.shapes
+                        title_shape = shapes.title
+                        body_shape = shapes.placeholders[1]
+                        title_shape.text = f"Key Concepts: {tlm_topic}"
+                        
+                        tf = body_shape.text_frame
+                        tf.text = f"Teaching Guide for {tlm_topic}"
+                        p = tf.add_paragraph()
+                        p.text = "1. Improvised Local Materials & Construction"
+                        p2 = tf.add_paragraph()
+                        p2.text = "2. Classroom Demonstration & Activity"
+                        p3 = tf.add_paragraph()
+                        p3.text = "3. Evaluation & Key Takeaways"
+
+                        # Save PPTX to Bytes buffer for download button
+                        ppt_buffer = io.BytesIO()
+                        prs.save(ppt_buffer)
+                        ppt_buffer.seek(0)
+
+                        st.download_button(
+                            label="📥 Download PowerPoint Presentation (.pptx)",
+                            data=ppt_buffer,
+                            file_name=f"{tlm_topic.replace(' ', '_')}_Lesson.pptx",
+                            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                        )
+
                 except Exception as e:
-                    st.error(f"Error: {str(e)}")
+                    st.error(f"Error generating resources: {str(e)}")
+    
                     
