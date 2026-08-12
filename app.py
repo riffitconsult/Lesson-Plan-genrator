@@ -11,7 +11,9 @@ try:
 except Exception:
     PDF_SUPPORT = False
 
-# 1. Page Configuration
+# ==========================================
+# 1. PAGE CONFIGURATION
+# ==========================================
 st.set_page_config(
     page_title="My T.A. | Smart AI Teaching Assistant",
     page_icon="🤖",
@@ -19,7 +21,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Advanced Custom CSS Styling
+# ==========================================
+# 2. ADVANCED CUSTOM CSS STYLING
+# ==========================================
 st.markdown("""
 <style>
     /* Global Styling */
@@ -128,7 +132,9 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. Session State
+# ==========================================
+# 3. SESSION STATE & HELPER FUNCTIONS
+# ==========================================
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
     st.session_state["teacher_name"] = ""
@@ -136,7 +142,6 @@ if "authenticated" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state["history"] = []
 
-# Helper Function: API Call with Auto-Retry
 def call_gemini_with_retry(client, prompt, max_retries=3):
     for attempt in range(max_retries):
         try:
@@ -151,7 +156,9 @@ def call_gemini_with_retry(client, prompt, max_retries=3):
             else:
                 raise e
 
+# ==========================================
 # 4. LOGIN SCREEN
+# ==========================================
 if not st.session_state["authenticated"]:
     st.markdown("""
     <div class="nav-container" style="justify-content: center; text-align: center; flex-direction: column; padding: 36px;">
@@ -180,9 +187,11 @@ if not st.session_state["authenticated"]:
                 st.rerun()
     st.stop()
 
-# 5. LOGGED-IN STUDIO APP
+# ==========================================
+# 5. LOGGED-IN STUDIO DASHBOARD
+# ==========================================
 
-# Sidebar Dashboard & History
+# Sidebar
 with st.sidebar:
     st.markdown(f"### 👋 Welcome, **{st.session_state['teacher_name']}**")
     st.success("My T.A. Active 🟢")
@@ -203,7 +212,7 @@ with st.sidebar:
             st.markdown(f"**{idx+1}. {item['type']}**")
             st.caption(f"{item['title']} ({item['date']})")
 
-# Top Navbar Header
+# Top Header Banner
 st.markdown(f"""
 <div class="nav-container">
     <div class="nav-brand">
@@ -234,7 +243,7 @@ with c4:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Curriculum Data
+# Curriculum Master Data
 CURRICULUM_DATA = {
     "Mathematics": {
         "Number": ["Whole Numbers, Place Value & Operations", "Fractions, Decimals & Percentages", "Ratios & Proportions"],
@@ -298,7 +307,7 @@ CURRICULUM_DATA = {
 
 CLASS_LEVELS = ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6", "Basic 7 (JHS 1)", "Basic 8 (JHS 2)", "Basic 9 (JHS 3)"]
 
-# MAIN WORKSPACE TABS WITH ICONS
+# MAIN WORKSPACE TABS
 tab_plan, tab_diff, tab_tlm, tab_faq = st.tabs([
     "📚 NaCCA Weekly Planner", 
     "🎯 Differentiated Tasks & Quizzes", 
@@ -444,12 +453,4 @@ with tab_tlm:
             with st.spinner("My T.A. is preparing your resources..."):
                 try:
                     client = genai.Client(api_key=st.session_state["api_key"])
-                    tlm_prompt = f"Provide zero-cost Ghanaian TLM ideas for: {tlm_topic}"
-                    tlm_response = call_gemini_with_retry(client, tlm_prompt)
-                    st.markdown(tlm_response.text)
-                    if gen_image:
-    st.markdown("### 🖼️ Generated Classroom Visual Chart")
-    clean_prompt = f"Educational infographic chart for classroom teaching about {tlm_topic}, clear labels, colorful, high quality"
-    image_url = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=800&height=500&seed=42"
-    st.image(image_url, caption=f"Printable Visual Chart: {tlm_topic}", use_container_width=True)
-
+                  
