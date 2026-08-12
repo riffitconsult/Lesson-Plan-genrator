@@ -175,7 +175,7 @@ if not st.session_state["authenticated"]:
 # 6. NAVIGATION SIDEBAR (IMAGE 3 ITEMS)
 # ==========================================
 with st.sidebar:
-    st.markdown(f"### 📘 **PlanAhead**")
+    st.markdown("### 📘 **PlanAhead**")
     st.caption(f"Logged in: {st.session_state['teacher_name']}")
     st.divider()
 
@@ -220,7 +220,7 @@ st.markdown(f"""
 # 8. ROUTING BASED ON SIDEBAR SELECTION
 # ==========================================
 
-# --- PAGE 1: LESSON PLAN GENERATOR (DESKTOP LAYOUT IMAGE 2) ---
+# --- PAGE 1: LESSON PLAN GENERATOR ---
 if nav_choice == "📝 Lesson Plan Generator":
     
     col_left, col_middle, col_right = st.columns([1.2, 1.5, 1])
@@ -246,7 +246,7 @@ if nav_choice == "📝 Lesson Plan Generator":
         st.markdown("### 🏡 Context & Environment")
         community_context = st.text_area(
             "Classroom & Community Context",
-            placeholder="e.g., Rural farming community, large class size (50+ students), mixed-ability learners, limited internet access. Focus on interactive group games.",
+            placeholder="e.g., Rural farming community, large class size (50+ students), mixed-ability learners, limited internet access.",
             height=90
         )
         
@@ -259,6 +259,95 @@ if nav_choice == "📝 Lesson Plan Generator":
                         lang_instruction = "Write the ENTIRE lesson plan strictly in FRENCH language." if "Français" in plan_language else "Write the lesson plan in English."
                         
                         prompt = f"""
+                        You are an expert curriculum planner. Generate a comprehensive weekly lesson plan.
+                        
+                        SETTINGS & CONTEXT:
+                        - Target Output Language: {plan_language} ({lang_instruction})
+                        - Subject: {subject}
+                        - Strand: {strand}
+                        - Topic: {topic_input}
+                        - Class Level: {grade_level}
+                        - Duration: {duration}
+                        - Classroom Environment & Community Context: {community_context if community_context else 'Standard classroom setup'}
+                        
+                        INSTRUCTIONS:
+                        1. Structure into 3 clear phases: Starter (Warm-up), Main Learning Activities, and Reflection/Assessment.
+                        2. Actively adapt activities and teaching aids to match the provided Community Context and Classroom Environment.
+                        """
+                        
+                        res = call_gemini_with_retry(client, prompt)
+                        st.session_state["current_plan"] = res.text
+                        st.session_state["history"].append({"title": f"{subject}: {topic_input} ({plan_language})"})
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+
+    # Middle Column: Preview & Edit Area
+    with col_middle:
+        st.markdown("### Lesson Preview & Edit")
+        plan_content = st.session_state.get("current_plan", "Select details on the left and click 'Generate Draft' to create your lesson plan preview here.")
+        edited_plan = st.text_area("Drafting Area", value=plan_content, height=520)
+        
+        c_btn1, c_btn2 = st.columns(2)
+        with c_btn1:
+            st.button("💾 Save Plan")
+        with c_btn2:
+            st.button("📤 Export Plan")
+
+    # Right Column: AI Suggestions
+    with col_right:
+        st.markdown("### AI Suggestions")
+        st.markdown("""
+        <div class="dashboard-card">
+            <strong>💡 Environmental Adaptation</strong><br>
+            <small>Incorporating rural or urban community references increases student engagement by up to 40%.</small>
+        </div>
+        <div class="dashboard-card">
+            <strong>🗣️ French Immersion Tip</strong><br>
+            <small>Use TPR (Total Physical Response) gestures alongside French audio prompts for beginner classes.</small>
+        </div>
+        """, unsafe_allow_html=True)
+
+# --- PAGE 2: DIFFERENTIATED TASKS & QUIZZES ---
+elif nav_choice == "🎯 Differentiated Tasks & Quizzes":
+    st.subheader("🎯 Differentiated Student Tasks & Quizzes")
+    diff_lang = st.radio("Task Language", ["English 🇬🇧", "Français 🇫🇷"], horizontal=True)
+    diff_topic = st.text_input("Topic or Concept", placeholder="e.g., Les articles définis et indéfinis or Fractions")
+    diff_grade = st.selectbox("Grade Level", CLASS_LEVELS, key="diff_g")
+    
+    if st.button("Generate Differentiated Tasks"):
+        if diff_topic:
+            with st.spinner("Generating multi-tier exercises..."):
+                try:
+                    client = genai.Client(api_key=st.session_state["api_key"])
+                    prompt = f"Generate multi-tier task levels (remedial, core, extension) for {diff_topic}, Grade {diff_grade}. Language: {diff_lang}."
+                    res = call_gemini_with_retry(client, prompt)
+                    st.markdown(res.text)
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+
+# --- PAGE 3: IMPROVISED TLMs & VISUALS ---
+elif nav_choice == "🎨 Improvised TLMs & Visuals":
+    st.subheader("🎨 Improvised Teaching Materials & Visual Aids")
+    tlm_topic = st.text_input("Topic for Visual Aid", placeholder="e.g., Objects in the classroom (Les objets de la classe)")
+    
+    if st.button("Generate Ideas & Visuals"):
+        if tlm_topic:
+            with st.spinner("Creating teaching material suggestions..."):
+                try:
+                    client = genai.Client(api_key=st.session_state["api_key"])
+                    res = call_gemini_with_retry(client, f"Provide low-cost/zero-cost local teaching material ideas for teaching {tlm_topic}.")
+                    st.markdown(res.text)
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+
+# --- PAGE 4: FAQ ---
+elif nav_choice == "❓ FAQ":
+    st.subheader("❓ Frequently Asked Questions")
+    with st.expander("Can I generate entire lesson plans in French?"):
+        st.write("Yes! Select 'Français 🇫🇷' in the Output Language dropdown on the Lesson Plan Generator tab, and all generated objectives, steps, and assessments will be created in French.")
+    with st.expander("How does the Community Context option work?"):
+        st.write("Entering details like class size, rural/urban setting, or resource availability instructs the AI to propose activities and materials that match your specific school environment.")
+prompt = f"""
                         You are an expert curriculum planner. Generate a comprehensive weekly lesson plan.
                         
                         SETTINGS & CONTEXT:
