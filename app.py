@@ -46,7 +46,7 @@ st.markdown("""
         font-weight: 500;
     }
 
-    /* Navigation Radio Items in Sidebar */
+    /* Sidebar Navigation Padding */
     div[data-testid="stSidebarNav"] {
         padding-top: 10px;
     }
@@ -75,7 +75,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. SESSION STATE
+# 3. SESSION STATE & HELPER FUNCTIONS
 # ==========================================
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
@@ -99,7 +99,61 @@ def call_gemini_with_retry(client, prompt, max_retries=3):
                 raise e
 
 # ==========================================
-# 4. LOGIN SCREEN
+# 4. MASTER CURRICULUM DATA
+# ==========================================
+CURRICULUM_DATA = {
+    "Mathematics": {
+        "Number": ["Whole Numbers, Place Value & Operations", "Fractions, Decimals & Percentages"],
+        "Algebra": ["Patterns & Relationships", "Algebraic Expressions & Equations"],
+        "Geometry & Measurement": ["Lines, Shapes & 3D Objects", "Perimeter, Area & Volume"],
+        "Data & Probability": ["Data Collection & Presentation", "Data Analysis & Probability"]
+    },
+    "Science": {
+        "Diversity of Matter": ["Living and Non-Living Things", "Materials & Mixtures", "States of Matter"],
+        "Cycles": ["Earth Science & Weather", "Life Cycles of Organisms"],
+        "Systems": ["Human Body Systems", "Plant Systems", "Ecosystems"],
+        "Forces and Energy": ["Sources & Forces of Motion", "Electricity & Magnetism"]
+    },
+    "French Language": {
+        "Oral Expression & Comprehension": ["Greetings & Self-Introduction", "School & Family Vocabulary", "Daily Directives"],
+        "Reading Comprehension": ["Simple Texts & Dialogues", "Vocabulary Building"],
+        "Written Expression": ["Short Sentences & Descriptions", "Grammar & Conjugation"]
+    },
+    "English Language": {
+        "Oral Language": ["Listening & Speaking", "Pronunciation & Intonation", "Storytelling & Poems"],
+        "Reading": ["Phonics & Vocabulary", "Comprehension Strategies", "Silent Reading"],
+        "Writing": ["Penmanship & Sentence Structure", "Composition & Creative Writing", "Grammar & Usage"],
+        "Literature": ["Folktales, Plays & Poetry Analysis"]
+    },
+    "Ghanaian Language & Culture": {
+        "Oral Language": ["Greeting & Customary Manners", "Proverbs & Folktales"],
+        "Reading & Comprehension": ["Local Language Texts & Orthography"],
+        "Culture & Heritage": ["Rites of Passage", "Traditional Governance & Values"]
+    },
+    "Career Technology": {
+        "Health and Safety": ["Personal & Workshop Safety", "Food Hygiene"],
+        "Materials for Production": ["Wood, Metal, Plastics", "Food Commodities & Processing"],
+        "Tools & Processes": ["Measuring & Marking Out Tools", "Cutting & Shaping Tools"]
+    },
+    "Religious & Moral Education (RME)": {
+        "God, Creation & Attributes": ["Attributes of God", "Environment & Stewardship"],
+        "Religious Practices": ["Worship Practices", "Religious Festivals"],
+        "Moral Life": ["Honesty, Integrity & Manners"]
+    },
+    "Social Studies": {
+        "Environment": ["Physical & Social Environment", "Map Work"],
+        "Family & Community": ["Roles in Family & Community", "Governance & Citizenship"]
+    },
+    "Computing": {
+        "Introduction to Computing": ["Hardware & Peripheral Devices", "Operating Systems"],
+        "Applications": ["Word Processing & Spreadsheets", "Web Browsing & E-Safety"]
+    }
+}
+
+CLASS_LEVELS = ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6", "Basic 7 (JHS 1)", "Basic 8 (JHS 2)", "Basic 9 (JHS 3)"]
+
+# ==========================================
+# 5. LOGIN SCREEN
 # ==========================================
 if not st.session_state["authenticated"]:
     st.markdown("<h2 style='text-align: center;'>🔐 PlanAhead Teacher Portal Login</h2>", unsafe_allow_html=True)
@@ -118,14 +172,14 @@ if not st.session_state["authenticated"]:
     st.stop()
 
 # ==========================================
-# 5. NAVIGATION SIDEBAR (IMAGE 3 ITEMS)
+# 6. NAVIGATION SIDEBAR (IMAGE 3 ITEMS)
 # ==========================================
 with st.sidebar:
     st.markdown(f"### 📘 **PlanAhead**")
     st.caption(f"Logged in: {st.session_state['teacher_name']}")
     st.divider()
 
-    # Image 3 Navigation Menu
+    # Image 3 Navigation Options
     nav_choice = st.radio(
         "NAVIGATION",
         [
@@ -153,7 +207,7 @@ with st.sidebar:
         st.rerun()
 
 # ==========================================
-# 6. TOP HEADER NAVBAR
+# 7. TOP HEADER NAVBAR
 # ==========================================
 st.markdown(f"""
 <div class="top-navbar">
@@ -162,14 +216,11 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Master Curriculum Setup
-CLASS_LEVELS = ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6", "Basic 7 (JHS 1)", "Basic 8 (JHS 2)", "Basic 9 (JHS 3)"]
-
 # ==========================================
-# 7. ROUTING BASED ON SIDEBAR SELECTION
+# 8. ROUTING BASED ON SIDEBAR SELECTION
 # ==========================================
 
-# --- PAGE 1: LESSON PLAN GENERATOR ---
+# --- PAGE 1: LESSON PLAN GENERATOR (DESKTOP LAYOUT IMAGE 2) ---
 if nav_choice == "📝 Lesson Plan Generator":
     
     col_left, col_middle, col_right = st.columns([1.2, 1.5, 1])
@@ -184,7 +235,8 @@ if nav_choice == "📝 Lesson Plan Generator":
             ["English 🇬🇧", "Français 🇫🇷 (French)", "English with French Terminology"]
         )
         
-        subject = st.selectbox("Subject", ["French Language", "Mathematics", "Science", "English Language", "Computing", "Social Studies", "Career Technology", "RME"])
+        subject = st.selectbox("Subject", list(CURRICULUM_DATA.keys()))
+        strand = st.selectbox("Strand", list(CURRICULUM_DATA[subject].keys()))
         topic_input = st.text_input("Topic", value="Se présenter et saluer / Greetings")
         
         grade_level = st.selectbox("Grade Level", CLASS_LEVELS)
@@ -204,22 +256,23 @@ if nav_choice == "📝 Lesson Plan Generator":
                     try:
                         client = genai.Client(api_key=st.session_state["api_key"])
                         
-                        lang_instruction = "Write the ENTIRE lesson plan in FRENCH." if "Français" in plan_language else "Write the lesson plan in English."
+                        lang_instruction = "Write the ENTIRE lesson plan strictly in FRENCH language." if "Français" in plan_language else "Write the lesson plan in English."
                         
                         prompt = f"""
-                        You are an expert curriculum planner. Generate a comprehensive lesson plan.
+                        You are an expert curriculum planner. Generate a comprehensive weekly lesson plan.
                         
-                        LANGUAGES & SETTINGS:
-                        - Target Language: {plan_language} ({lang_instruction})
+                        SETTINGS & CONTEXT:
+                        - Target Output Language: {plan_language} ({lang_instruction})
                         - Subject: {subject}
+                        - Strand: {strand}
                         - Topic: {topic_input}
                         - Class Level: {grade_level}
                         - Duration: {duration}
                         - Classroom Environment & Community Context: {community_context if community_context else 'Standard classroom setup'}
                         
                         INSTRUCTIONS:
-                        1. Structure into 3 phases: Starter (Warm-up), Main Learning/Activities, and Reflection/Closure.
-                        2. Actively tailor the activities and teaching aids to match the provided Community Context and Classroom Environment so it suits the learners' everyday realities.
+                        1. Structure into 3 clear phases: Starter (Warm-up), Main Learning Activities, and Reflection/Assessment.
+                        2. Actively adapt activities and teaching aids to match the provided Community Context and Classroom Environment so it directly fits the learners' daily lives.
                         """
                         
                         res = call_gemini_with_retry(client, prompt)
@@ -232,7 +285,7 @@ if nav_choice == "📝 Lesson Plan Generator":
     with col_middle:
         st.markdown("### Lesson Preview & Edit")
         plan_content = st.session_state.get("current_plan", "Select details on the left and click 'Generate Draft' to create your lesson plan preview here.")
-        edited_plan = st.text_area("Drafting Area", value=plan_content, height=480)
+        edited_plan = st.text_area("Drafting Area", value=plan_content, height=520)
         
         c_btn1, c_btn2 = st.columns(2)
         with c_btn1:
@@ -242,15 +295,15 @@ if nav_choice == "📝 Lesson Plan Generator":
 
     # Right Column: AI Suggestions
     with col_right:
-        st.markdown("### AI Context Suggestions")
+        st.markdown("### AI Suggestions")
         st.markdown("""
         <div class="dashboard-card">
-            <strong>💡 Contextual Relevance</strong><br>
-            <small>Adapting examples to match the community helps learners connect abstract concepts to daily life.</small>
+            <strong>💡 Environmental Adaptation</strong><br>
+            <small>Incorporating rural or urban community references increases student engagement by up to 40%.</small>
         </div>
         <div class="dashboard-card">
             <strong>🗣️ French Immersion Tip</strong><br>
-            <small>In corporate or mixed environments, include simple French total physical response (TPR) gestures.</small>
+            <small>Use TPR (Total Physical Response) gestures alongside French audio prompts for beginner classes.</small>
         </div>
         """, unsafe_allow_html=True)
 
@@ -260,6 +313,41 @@ elif nav_choice == "🎯 Differentiated Tasks & Quizzes":
     diff_lang = st.radio("Task Language", ["English 🇬🇧", "Français 🇫🇷"], horizontal=True)
     diff_topic = st.text_input("Topic or Concept", placeholder="e.g., Les articles définis et indéfinis or Fractions")
     diff_grade = st.selectbox("Grade Level", CLASS_LEVELS, key="diff_g")
+    
+    if st.button("Generate Differentiated Tasks"):
+        if diff_topic:
+            with st.spinner("Generating multi-tier exercises..."):
+                try:
+                    client = genai.Client(api_key=st.session_state["api_key"])
+                    prompt = f"Generate multi-tier task levels (remedial, core, extension) for {diff_topic}, Grade {diff_grade}. Language: {diff_lang}."
+                    res = call_gemini_with_retry(client, prompt)
+                    st.markdown(res.text)
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+
+# --- PAGE 3: IMPROVISED TLMs & VISUALS ---
+elif nav_choice == "🎨 Improvised TLMs & Visuals":
+    st.subheader("🎨 Improvised Teaching Materials & Visual Aids")
+    tlm_topic = st.text_input("Topic for Visual Aid", placeholder="e.g., Objects in the classroom (Les objets de la classe)")
+    
+    if st.button("Generate Ideas & Visuals"):
+        if tlm_topic:
+            with st.spinner("Creating teaching material suggestions..."):
+                try:
+                    client = genai.Client(api_key=st.session_state["api_key"])
+                    res = call_gemini_with_retry(client, f"Provide low-cost/zero-cost local teaching material ideas for teaching {tlm_topic}.")
+                    st.markdown(res.text)
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+
+# --- PAGE 4: FAQ ---
+elif nav_choice == "❓ FAQ":
+    st.subheader("❓ Frequently Asked Questions")
+    with st.expander("Can I generate entire lesson plans in French?"):
+        st.write("Yes! Select 'Français 🇫🇷' in the Output Language dropdown on the Lesson Plan Generator tab, and all generated objectives, steps, and assessments will be created in French.")
+    with st.expander("How does the Community Context option work?"):
+        st.write("Entering details like class size, rural/urban setting, or resource availability instructs the AI to propose activities and materials that match your specific school environment.")
+diff_grade = st.selectbox("Grade Level", CLASS_LEVELS, key="diff_g")
     
     if st.button("Generate Differentiated Tasks"):
         if diff_topic:
