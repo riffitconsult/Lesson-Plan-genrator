@@ -1,139 +1,81 @@
 import streamlit as st
 from google import genai
-from docx import Document
-import io
 import time
-
-# Try importing WeasyPrint for PDF export
-try:
-    from weasyprint import HTML
-    PDF_SUPPORT = True
-except Exception:
-    PDF_SUPPORT = False
 
 # ==========================================
 # 1. PAGE CONFIGURATION
 # ==========================================
 st.set_page_config(
-    page_title="My T.A. | Smart AI Teaching Assistant",
+    page_title="PlanAhead: AI Lesson Wizard",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # ==========================================
-# 2. ADVANCED CUSTOM CSS STYLING
+# 2. RESPONSIVE CSS STYLING
 # ==========================================
 st.markdown("""
 <style>
-    /* Global Styling */
+    /* Global Background */
     .stApp {
         background-color: #F8FAFC;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* Custom Header / Navbar */
-    .nav-container {
+    /* Top Navigation Bar */
+    .top-navbar {
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-        padding: 16px 28px;
-        border-radius: 16px;
-        margin-bottom: 24px;
-        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
-    }
-    .nav-brand {
-        display: flex;
         align-items: center;
-        gap: 12px;
-    }
-    .nav-brand h1 {
-        color: #38BDF8 !important;
-        font-size: 26px !important;
-        font-weight: 800 !important;
-        margin: 0 !important;
-        letter-spacing: -0.5px;
-    }
-    .nav-brand span {
-        color: #94A3B8;
-        font-size: 13px;
-        background: rgba(255,255,255,0.08);
-        padding: 4px 10px;
-        border-radius: 20px;
-        border: 1px solid rgba(255,255,255,0.1);
-    }
-
-    /* Stats Banner */
-    .stat-card {
-        background: white;
+        background-color: #FFFFFF;
+        padding: 12px 24px;
         border-radius: 12px;
-        padding: 18px;
-        text-align: center;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         border: 1px solid #E2E8F0;
-        transition: transform 0.2s ease;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    .stat-card:hover {
-        transform: translateY(-2px);
+    .brand-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #0F172A;
     }
-    .stat-val {
-        font-size: 24px;
-        font-weight: 800;
-        color: #0284C7;
-    }
-    .stat-lbl {
-        font-size: 12px;
-        color: #64748B;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-top: 4px;
+    .user-profile {
+        font-size: 14px;
+        color: #475569;
+        font-weight: 500;
     }
 
-    /* Buttons */
-    .stButton>button {
-        width: 100%;
-        background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%) !important;
-        color: white !important;
-        font-size: 15px !important;
-        font-weight: 600 !important;
-        padding: 12px 20px !important;
-        border-radius: 10px !important;
-        border: none !important;
-        box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
-        transition: all 0.2s ease !important;
-    }
-    .stButton>button:hover {
-        background: linear-gradient(135deg, #0369A1 0%, #075985 100%) !important;
-        transform: translateY(-1px);
-    }
-
-    /* Badges & Cards */
-    .day-badge {
-        background-color: #E0F2FE;
-        color: #0369A1;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-weight: 600;
-        font-size: 13px;
-        border: 1px solid #BAE6FD;
-        display: inline-block;
-        margin-right: 6px;
+    /* Navigation Radio Items in Sidebar */
+    div[data-testid="stSidebarNav"] {
+        padding-top: 10px;
     }
     
-    .testimonial-card {
-        background: white;
-        padding: 16px;
+    /* Card Styling */
+    .dashboard-card {
+        background-color: #FFFFFF;
+        padding: 20px;
         border-radius: 12px;
-        border-left: 4px solid #38BDF8;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-        margin-bottom: 12px;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        margin-bottom: 16px;
+    }
+
+    /* Button Styling */
+    .stButton>button {
+        width: 100%;
+        background-color: #0284C7 !important;
+        color: white !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        padding: 10px 16px !important;
+        border: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. SESSION STATE & HELPER FUNCTIONS
+# 3. SESSION STATE
 # ==========================================
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
@@ -160,116 +102,199 @@ def call_gemini_with_retry(client, prompt, max_retries=3):
 # 4. LOGIN SCREEN
 # ==========================================
 if not st.session_state["authenticated"]:
-    st.markdown("""
-    <div class="nav-container" style="justify-content: center; text-align: center; flex-direction: column; padding: 36px;">
-        <div style="font-size: 54px; margin-bottom: 8px;">🤖📚</div>
-        <h1 style="color: #38BDF8; font-size: 38px; font-weight: 800; margin: 0;">My T.A.</h1>
-        <p style="color: #94A3B8; font-size: 16px; margin-top: 6px;">Your Smart AI Teaching Assistant for Ghanaian NaCCA Curriculum Prep</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
+    st.markdown("<h2 style='text-align: center;'>🔐 PlanAhead Teacher Portal Login</h2>", unsafe_allow_html=True)
     col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
     with col_l2:
-        st.subheader("🔐 Teacher Portal Login")
-        st.info("Enter your Teacher Name and Gemini API Key to access your workspace.")
-        
-        teacher_name = st.text_input("👤 Teacher Name", placeholder="e.g., Mr. Mensah")
-        api_key_input = st.text_input("🔑 Gemini API Key", type="password", placeholder="Paste your key here...")
-        st.markdown("👉 [Get a free Gemini API Key here](https://aistudio.google.com/)")
-        
-        if st.button("🚀 Enter Studio"):
-            if not teacher_name or not api_key_input:
-                st.error("Please enter both your name and API key.")
-            else:
+        teacher_name = st.text_input("👤 Teacher Name", placeholder="e.g., Mme. Dupont / Mr. Mensah")
+        api_key_input = st.text_input("🔑 Gemini API Key", type="password", placeholder="Paste API key here...")
+        if st.button("🚀 Enter Portal"):
+            if teacher_name and api_key_input:
                 st.session_state["authenticated"] = True
                 st.session_state["teacher_name"] = teacher_name
                 st.session_state["api_key"] = api_key_input
                 st.rerun()
+            else:
+                st.error("Please provide both your name and API key.")
     st.stop()
 
 # ==========================================
-# 5. LOGGED-IN STUDIO DASHBOARD
+# 5. NAVIGATION SIDEBAR (IMAGE 3 ITEMS)
 # ==========================================
-
-# Sidebar
 with st.sidebar:
-    st.markdown(f"### 👋 Welcome, **{st.session_state['teacher_name']}**")
-    st.success("My T.A. Active 🟢")
+    st.markdown(f"### 📘 **PlanAhead**")
+    st.caption(f"Logged in: {st.session_state['teacher_name']}")
+    st.divider()
+
+    # Image 3 Navigation Menu
+    nav_choice = st.radio(
+        "NAVIGATION",
+        [
+            "📝 Lesson Plan Generator",
+            "🎯 Differentiated Tasks & Quizzes",
+            "🎨 Improvised TLMs & Visuals",
+            "❓ FAQ"
+        ]
+    )
+
+    st.divider()
     
+    # Image 3 Recent Plans Section
+    st.markdown("### 🕒 **Recent Plans**")
+    if len(st.session_state["history"]) == 0:
+        st.caption("• French (Basic 8) - Salutations")
+        st.caption("• Basic 7 Science - Ecosystems")
+    else:
+        for item in st.session_state["history"][-5:]:
+            st.caption(f"• {item['title']}")
+
+    st.divider()
     if st.button("🚪 Logout"):
         st.session_state["authenticated"] = False
-        st.session_state["teacher_name"] = ""
-        st.session_state["api_key"] = ""
-        st.session_state["history"] = []
         st.rerun()
-        
-    st.divider()
-    st.subheader("🗂️ My Session Library")
-    if len(st.session_state["history"]) == 0:
-        st.caption("No generated items yet in this session.")
-    else:
-        for idx, item in enumerate(st.session_state["history"]):
-            st.markdown(f"**{idx+1}. {item['type']}**")
-            st.caption(f"{item['title']} ({item['date']})")
 
-# Top Header Banner
+# ==========================================
+# 6. TOP HEADER NAVBAR
+# ==========================================
 st.markdown(f"""
-<div class="nav-container">
-    <div class="nav-brand">
-        <div style="font-size: 32px;">🤖</div>
-        <div>
-            <h1>My T.A. Studio</h1>
-            <span style="color:#94A3B8; font-size:12px;">Assistant: {st.session_state['teacher_name']} | NaCCA Standard-Based & CCP</span>
-        </div>
-    </div>
-    <div>
-        <span style="color:#38BDF8; background:rgba(56, 189, 248, 0.1); padding:6px 12px; border-radius:20px; font-size:13px; border:1px solid rgba(56, 189, 248, 0.3);">
-            Basic 1 – Basic 9 (JHS 3)
-        </span>
-    </div>
+<div class="top-navbar">
+    <div class="brand-title">📘 PlanAhead: AI Lesson Wizard</div>
+    <div class="user-profile">👤 {st.session_state['teacher_name']}</div>
 </div>
 """, unsafe_allow_html=True)
 
-# Quick Metrics Row
-c1, c2, c3, c4 = st.columns(4)
-with c1:
-    st.markdown("""<div class="stat-card"><div class="stat-val">9</div><div class="stat-lbl">Core NaCCA Subjects</div></div>""", unsafe_allow_html=True)
-with c2:
-    st.markdown("""<div class="stat-card"><div class="stat-val">B1 – B9</div><div class="stat-lbl">Class Levels Supported</div></div>""", unsafe_allow_html=True)
-with c3:
-    st.markdown("""<div class="stat-card"><div class="stat-val">&lt; 10s</div><div class="stat-lbl">Generation Time</div></div>""", unsafe_allow_html=True)
-with c4:
-    st.markdown("""<div class="stat-card"><div class="stat-val">100% Free</div><div class="stat-lbl">With Gemini Key</div></div>""", unsafe_allow_html=True)
+# Master Curriculum Setup
+CLASS_LEVELS = ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6", "Basic 7 (JHS 1)", "Basic 8 (JHS 2)", "Basic 9 (JHS 3)"]
 
-st.markdown("<br>", unsafe_allow_html=True)
+# ==========================================
+# 7. ROUTING BASED ON SIDEBAR SELECTION
+# ==========================================
 
-# Curriculum Master Data
-CURRICULUM_DATA = {
-    "Mathematics": {
-        "Number": ["Whole Numbers, Place Value & Operations", "Fractions, Decimals & Percentages", "Ratios & Proportions"],
-        "Algebra": ["Patterns & Relationships", "Algebraic Expressions & Equations"],
-        "Geometry & Measurement": ["Lines, Shapes & 3D Objects", "Position & Transformation", "Perimeter, Area & Volume"],
-        "Data & Probability": ["Data Collection & Presentation", "Data Analysis & Probability"]
-    },
-    "Science": {
-        "Diversity of Matter": ["Living and Non-Living Things", "Materials & Mixtures", "States of Matter"],
-        "Cycles": ["Earth Science & Weather", "Life Cycles of Organisms", "Solar System"],
-        "Systems": ["Human Body Systems", "Plant Systems", "Ecosystems"],
-        "Forces and Energy": ["Sources & Forces of Motion", "Electricity & Magnetism", "Forms of Energy"],
-        "Humans and the Environment": ["Personal Hygiene & Sanitation", "Diseases & Climate Change", "Soil & Agriculture"]
-    },
-    "English Language": {
-        "Oral Language": ["Listening & Speaking", "Pronunciation & Intonation", "Storytelling & Poems"],
-        "Reading": ["Phonics & Vocabulary", "Comprehension Strategies", "Silent Reading"],
-        "Writing": ["Penmanship & Sentence Structure", "Composition & Creative Writing", "Grammar & Usage"],
-        "Literature": ["Folktales, Plays & Poetry Analysis"]
-    },
-    "French Language": {
-        "Oral Expression & Comprehension": ["Greetings & Self-Introduction", "School & Family Vocabulary", "Daily Activities & Directives"],
-        "Reading Comprehension": ["Simple Texts & Dialogues", "Vocabulary Building"],
-        "Written Expression": ["Short Sentences & Descriptions", "Grammar & Conjugation Basics"]
-    },
-    "Ghanaian Language & Culture": {
+# --- PAGE 1: LESSON PLAN GENERATOR ---
+if nav_choice == "📝 Lesson Plan Generator":
+    
+    col_left, col_middle, col_right = st.columns([1.2, 1.5, 1])
+
+    # Left Column: Inputs, Language & Community Context
+    with col_left:
+        st.markdown("### Step 1: Lesson Details")
+        
+        # Output Language Selector
+        plan_language = st.selectbox(
+            "🌐 Output Language", 
+            ["English 🇬🇧", "Français 🇫🇷 (French)", "English with French Terminology"]
+        )
+        
+        subject = st.selectbox("Subject", ["French Language", "Mathematics", "Science", "English Language", "Computing", "Social Studies", "Career Technology", "RME"])
+        topic_input = st.text_input("Topic", value="Se présenter et saluer / Greetings")
+        
+        grade_level = st.selectbox("Grade Level", CLASS_LEVELS)
+        duration = st.selectbox("Duration", ["30 min", "45 min", "60 min", "90 min"])
+
+        st.markdown("---")
+        st.markdown("### 🏡 Context & Environment")
+        community_context = st.text_area(
+            "Classroom & Community Context",
+            placeholder="e.g., Rural farming community, large class size (50+ students), mixed-ability learners, limited internet access. Focus on interactive group games.",
+            height=90
+        )
+        
+        if st.button("🚀 Generate Draft"):
+            if topic_input:
+                with st.spinner("Generating customized lesson plan..."):
+                    try:
+                        client = genai.Client(api_key=st.session_state["api_key"])
+                        
+                        lang_instruction = "Write the ENTIRE lesson plan in FRENCH." if "Français" in plan_language else "Write the lesson plan in English."
+                        
+                        prompt = f"""
+                        You are an expert curriculum planner. Generate a comprehensive lesson plan.
+                        
+                        LANGUAGES & SETTINGS:
+                        - Target Language: {plan_language} ({lang_instruction})
+                        - Subject: {subject}
+                        - Topic: {topic_input}
+                        - Class Level: {grade_level}
+                        - Duration: {duration}
+                        - Classroom Environment & Community Context: {community_context if community_context else 'Standard classroom setup'}
+                        
+                        INSTRUCTIONS:
+                        1. Structure into 3 phases: Starter (Warm-up), Main Learning/Activities, and Reflection/Closure.
+                        2. Actively tailor the activities and teaching aids to match the provided Community Context and Classroom Environment so it suits the learners' everyday realities.
+                        """
+                        
+                        res = call_gemini_with_retry(client, prompt)
+                        st.session_state["current_plan"] = res.text
+                        st.session_state["history"].append({"title": f"{subject}: {topic_input} ({plan_language})"})
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+
+    # Middle Column: Preview & Edit Area
+    with col_middle:
+        st.markdown("### Lesson Preview & Edit")
+        plan_content = st.session_state.get("current_plan", "Select details on the left and click 'Generate Draft' to create your lesson plan preview here.")
+        edited_plan = st.text_area("Drafting Area", value=plan_content, height=480)
+        
+        c_btn1, c_btn2 = st.columns(2)
+        with c_btn1:
+            st.button("💾 Save Plan")
+        with c_btn2:
+            st.button("📤 Export Plan")
+
+    # Right Column: AI Suggestions
+    with col_right:
+        st.markdown("### AI Context Suggestions")
+        st.markdown("""
+        <div class="dashboard-card">
+            <strong>💡 Contextual Relevance</strong><br>
+            <small>Adapting examples to match the community helps learners connect abstract concepts to daily life.</small>
+        </div>
+        <div class="dashboard-card">
+            <strong>🗣️ French Immersion Tip</strong><br>
+            <small>In corporate or mixed environments, include simple French total physical response (TPR) gestures.</small>
+        </div>
+        """, unsafe_allow_html=True)
+
+# --- PAGE 2: DIFFERENTIATED TASKS & QUIZZES ---
+elif nav_choice == "🎯 Differentiated Tasks & Quizzes":
+    st.subheader("🎯 Differentiated Student Tasks & Quizzes")
+    diff_lang = st.radio("Task Language", ["English 🇬🇧", "Français 🇫🇷"], horizontal=True)
+    diff_topic = st.text_input("Topic or Concept", placeholder="e.g., Les articles définis et indéfinis or Fractions")
+    diff_grade = st.selectbox("Grade Level", CLASS_LEVELS, key="diff_g")
+    
+    if st.button("Generate Differentiated Tasks"):
+        if diff_topic:
+            with st.spinner("Generating multi-tier exercises..."):
+                try:
+                    client = genai.Client(api_key=st.session_state["api_key"])
+                    prompt = f"Generate multi-tier task levels (remedial, core, extension) for {diff_topic}, Grade {diff_grade}. Language: {diff_lang}."
+                    res = call_gemini_with_retry(client, prompt)
+                    st.markdown(res.text)
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+
+# --- PAGE 3: IMPROVISED TLMs & VISUALS ---
+elif nav_choice == "🎨 Improvised TLMs & Visuals":
+    st.subheader("🎨 Improvised Teaching Materials & Visual Aids")
+    tlm_topic = st.text_input("Topic for Visual Aid", placeholder="e.g., Objects in the classroom (Les objets de la classe)")
+    
+    if st.button("Generate Ideas & Visuals"):
+        if tlm_topic:
+            with st.spinner("Creating teaching material suggestions..."):
+                try:
+                    client = genai.Client(api_key=st.session_state["api_key"])
+                    res = call_gemini_with_retry(client, f"Provide low-cost/zero-cost local teaching material ideas for teaching {tlm_topic}.")
+                    st.markdown(res.text)
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+
+# --- PAGE 4: FAQ ---
+elif nav_choice == "❓ FAQ":
+    st.subheader("❓ Frequently Asked Questions")
+    with st.expander("Can I generate entire lesson plans in French?"):
+        st.write("Yes! Select 'Français 🇫🇷' in the Output Language dropdown on the Lesson Plan Generator tab, and all generated objectives, steps, and assessments will be in French.")
+    with st.expander("How does the Community Context option work?"):
+        st.write("Entering details like class size, rural/urban setting, or resource availability instructs the AI to propose activities and materials that match your specific school environment.")
+ture": {
         "Oral Language (Listening & Speaking)": ["Greeting & Customary Manners", "Proverbs, Riddles & Folktales", "Customs & Festival Narratives"],
         "Reading & Comprehension": ["Local Language Texts & Orthography", "Literary Analysis"],
         "Writing & Composition": ["Spelling & Grammar Rules", "Creative Writing in Ghanaian Language"],
