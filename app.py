@@ -172,14 +172,13 @@ if not st.session_state["authenticated"]:
     st.stop()
 
 # ==========================================
-# 6. NAVIGATION SIDEBAR (IMAGE 3 ITEMS)
+# 6. NAVIGATION SIDEBAR
 # ==========================================
 with st.sidebar:
     st.markdown("### 📘 **PlanAhead**")
     st.caption(f"Logged in: {st.session_state['teacher_name']}")
     st.divider()
 
-    # Image 3 Navigation Options
     nav_choice = st.radio(
         "NAVIGATION",
         [
@@ -192,7 +191,6 @@ with st.sidebar:
 
     st.divider()
     
-    # Image 3 Recent Plans Section
     st.markdown("### 🕒 **Recent Plans**")
     if len(st.session_state["history"]) == 0:
         st.caption("• French (Basic 8) - Salutations")
@@ -229,7 +227,6 @@ if nav_choice == "📝 Lesson Plan Generator":
     with col_left:
         st.markdown("### Step 1: Lesson Details")
         
-        # Output Language Selector
         plan_language = st.selectbox(
             "🌐 Output Language", 
             ["English 🇬🇧", "Français 🇫🇷 (French)", "English with French Terminology"]
@@ -255,7 +252,6 @@ if nav_choice == "📝 Lesson Plan Generator":
                 with st.spinner("Generating customized lesson plan..."):
                     try:
                         client = genai.Client(api_key=st.session_state["api_key"])
-                        
                         lang_instruction = "Write the ENTIRE lesson plan strictly in FRENCH language." if "Français" in plan_language else "Write the lesson plan in English."
                         
                         prompt = f"""
@@ -335,7 +331,8 @@ elif nav_choice == "🎨 Improvised TLMs & Visuals":
             with st.spinner("Creating teaching material suggestions..."):
                 try:
                     client = genai.Client(api_key=st.session_state["api_key"])
-                    res = call_gemini_with_retry(client, f"Provide low-cost/zero-cost local teaching material ideas for teaching {tlm_topic}.")
+                    prompt = f"Provide low-cost/zero-cost local teaching material ideas for teaching {tlm_topic}."
+                    res = call_gemini_with_retry(client, prompt)
                     st.markdown(res.text)
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
@@ -347,324 +344,3 @@ elif nav_choice == "❓ FAQ":
         st.write("Yes! Select 'Français 🇫🇷' in the Output Language dropdown on the Lesson Plan Generator tab, and all generated objectives, steps, and assessments will be created in French.")
     with st.expander("How does the Community Context option work?"):
         st.write("Entering details like class size, rural/urban setting, or resource availability instructs the AI to propose activities and materials that match your specific school environment.")
-prompt = f"""
-                        You are an expert curriculum planner. Generate a comprehensive weekly lesson plan.
-                        
-                        SETTINGS & CONTEXT:
-                        - Target Output Language: {plan_language} ({lang_instruction})
-                        - Subject: {subject}
-                        - Strand: {strand}
-                        - Topic: {topic_input}
-                        - Class Level: {grade_level}
-                        - Duration: {duration}
-                        - Classroom Environment & Community Context: {community_context if community_context else 'Standard classroom setup'}
-                        
-                        INSTRUCTIONS:
-                        1. Structure into 3 clear phases: Starter (Warm-up), Main Learning Activities, and Reflection/Assessment.
-                        2. Actively adapt activities and teaching aids to match the provided Community Context and Classroom Environment so it directly fits the learners' daily lives.
-                        """
-                        
-                        res = call_gemini_with_retry(client, prompt)
-                        st.session_state["current_plan"] = res.text
-                        st.session_state["history"].append({"title": f"{subject}: {topic_input} ({plan_language})"})
-                    except Exception as e:
-                        st.error(f"Error: {str(e)}")
-
-    # Middle Column: Preview & Edit Area
-    with col_middle:
-        st.markdown("### Lesson Preview & Edit")
-        plan_content = st.session_state.get("current_plan", "Select details on the left and click 'Generate Draft' to create your lesson plan preview here.")
-        edited_plan = st.text_area("Drafting Area", value=plan_content, height=520)
-        
-        c_btn1, c_btn2 = st.columns(2)
-        with c_btn1:
-            st.button("💾 Save Plan")
-        with c_btn2:
-            st.button("📤 Export Plan")
-
-    # Right Column: AI Suggestions
-    with col_right:
-        st.markdown("### AI Suggestions")
-        st.markdown("""
-        <div class="dashboard-card">
-            <strong>💡 Environmental Adaptation</strong><br>
-            <small>Incorporating rural or urban community references increases student engagement by up to 40%.</small>
-        </div>
-        <div class="dashboard-card">
-            <strong>🗣️ French Immersion Tip</strong><br>
-            <small>Use TPR (Total Physical Response) gestures alongside French audio prompts for beginner classes.</small>
-        </div>
-        """, unsafe_allow_html=True)
-
-# --- PAGE 2: DIFFERENTIATED TASKS & QUIZZES ---
-elif nav_choice == "🎯 Differentiated Tasks & Quizzes":
-    st.subheader("🎯 Differentiated Student Tasks & Quizzes")
-    diff_lang = st.radio("Task Language", ["English 🇬🇧", "Français 🇫🇷"], horizontal=True)
-    diff_topic = st.text_input("Topic or Concept", placeholder="e.g., Les articles définis et indéfinis or Fractions")
-    diff_grade = st.selectbox("Grade Level", CLASS_LEVELS, key="diff_g")
-    
-    if st.button("Generate Differentiated Tasks"):
-        if diff_topic:
-            with st.spinner("Generating multi-tier exercises..."):
-                try:
-                    client = genai.Client(api_key=st.session_state["api_key"])
-                    prompt = f"Generate multi-tier task levels (remedial, core, extension) for {diff_topic}, Grade {diff_grade}. Language: {diff_lang}."
-                    res = call_gemini_with_retry(client, prompt)
-                    st.markdown(res.text)
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
-
-# --- PAGE 3: IMPROVISED TLMs & VISUALS ---
-elif nav_choice == "🎨 Improvised TLMs & Visuals":
-    st.subheader("🎨 Improvised Teaching Materials & Visual Aids")
-    tlm_topic = st.text_input("Topic for Visual Aid", placeholder="e.g., Objects in the classroom (Les objets de la classe)")
-    
-    if st.button("Generate Ideas & Visuals"):
-        if tlm_topic:
-            with st.spinner("Creating teaching material suggestions..."):
-                try:
-                    client = genai.Client(api_key=st.session_state["api_key"])
-                    res = call_gemini_with_retry(client, f"Provide low-cost/zero-cost local teaching material ideas for teaching {tlm_topic}.")
-                    st.markdown(res.text)
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
-
-# --- PAGE 4: FAQ ---
-elif nav_choice == "❓ FAQ":
-    st.subheader("❓ Frequently Asked Questions")
-    with st.expander("Can I generate entire lesson plans in French?"):
-        st.write("Yes! Select 'Français 🇫🇷' in the Output Language dropdown on the Lesson Plan Generator tab, and all generated objectives, steps, and assessments will be created in French.")
-    with st.expander("How does the Community Context option work?"):
-        st.write("Entering details like class size, rural/urban setting, or resource availability instructs the AI to propose activities and materials that match your specific school environment.")
-diff_grade = st.selectbox("Grade Level", CLASS_LEVELS, key="diff_g")
-    
-    if st.button("Generate Differentiated Tasks"):
-        if diff_topic:
-            with st.spinner("Generating multi-tier exercises..."):
-                try:
-                    client = genai.Client(api_key=st.session_state["api_key"])
-                    prompt = f"Generate multi-tier task levels (remedial, core, extension) for {diff_topic}, Grade {diff_grade}. Language: {diff_lang}."
-                    res = call_gemini_with_retry(client, prompt)
-                    st.markdown(res.text)
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
-
-# --- PAGE 3: IMPROVISED TLMs & VISUALS ---
-elif nav_choice == "🎨 Improvised TLMs & Visuals":
-    st.subheader("🎨 Improvised Teaching Materials & Visual Aids")
-    tlm_topic = st.text_input("Topic for Visual Aid", placeholder="e.g., Objects in the classroom (Les objets de la classe)")
-    
-    if st.button("Generate Ideas & Visuals"):
-        if tlm_topic:
-            with st.spinner("Creating teaching material suggestions..."):
-                try:
-                    client = genai.Client(api_key=st.session_state["api_key"])
-                    res = call_gemini_with_retry(client, f"Provide low-cost/zero-cost local teaching material ideas for teaching {tlm_topic}.")
-                    st.markdown(res.text)
-                except Exception as e:
-                    st.error(f"Error: {str(e)}")
-
-# --- PAGE 4: FAQ ---
-elif nav_choice == "❓ FAQ":
-    st.subheader("❓ Frequently Asked Questions")
-    with st.expander("Can I generate entire lesson plans in French?"):
-        st.write("Yes! Select 'Français 🇫🇷' in the Output Language dropdown on the Lesson Plan Generator tab, and all generated objectives, steps, and assessments will be in French.")
-    with st.expander("How does the Community Context option work?"):
-        st.write("Entering details like class size, rural/urban setting, or resource availability instructs the AI to propose activities and materials that match your specific school environment.")
-ture": {
-        "Oral Language (Listening & Speaking)": ["Greeting & Customary Manners", "Proverbs, Riddles & Folktales", "Customs & Festival Narratives"],
-        "Reading & Comprehension": ["Local Language Texts & Orthography", "Literary Analysis"],
-        "Writing & Composition": ["Spelling & Grammar Rules", "Creative Writing in Ghanaian Language"],
-        "Culture & Heritage": ["Rites of Passage", "Traditional Governance & Values"]
-    },
-    "Career Technology": {
-        "Health and Safety": ["Personal & Workshop Safety", "Food Hygiene & Environmental Health"],
-        "Materials for Production": ["Complimentary Materials (Wood, Metal, Plastics)", "Food Commodities & Processing", "Sewing Materials & Tools"],
-        "Tools, Equipment & Processes": ["Measuring & Marking Out Tools", "Cutting & Shaping Tools", "Joining & Finishing Techniques"],
-        "Technology & Design": ["Designing & Drawing Skills", "Modeling & Prototyping"],
-        "Entrepreneurship": ["Basic Business Management", "Marketing & Financial Literacy"]
-    },
-    "Religious & Moral Education (RME)": {
-        "God, His Creation and Attributes": ["Attributes of God", "Environment & Stewardship"],
-        "Religious Practices & Worship": ["Islamic, Christian & Traditional Worship Practices", "Religious Festivals"],
-        "Moral Life & Character": ["Honesty, Integrity & Obedience", "Manners & Social Values"],
-        "Social and Cultural Values": ["Family & Community Roles", "Conflict Resolution & Peace"]
-    },
-    "Social Studies": {
-        "Environment": ["Our Physical & Social Environment", "Map Work & Directions"],
-        "Family & Community": ["Roles in Family & Community", "Governance & Citizenship"],
-        "Sense of Purpose": ["Culture & National Identity", "Socializing & Values"]
-    },
-    "Computing": {
-        "Introduction to Computing": ["Hardware & Peripheral Devices", "Operating Systems & Software"],
-        "Presentation & Word Processing": ["Editing Documents", "Formatting Text & Tables"],
-        "Internet & Communication": ["Web Browsing & E-Safety", "Emails & Online Tools"],
-        "Programming & Databases": ["Basic Coding Concepts", "Algorithms & Flowcharts"]
-    },
-    "Creative Arts": {
-        "Visual Arts": ["Drawing, Painting & Design", "Crafts & Sculpture"],
-        "Performing Arts": ["Music, Dance & Drama Performances"]
-    }
-}
-
-CLASS_LEVELS = ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6", "Basic 7 (JHS 1)", "Basic 8 (JHS 2)", "Basic 9 (JHS 3)"]
-
-# MAIN WORKSPACE TABS
-tab_plan, tab_diff, tab_tlm, tab_faq = st.tabs([
-    "📚 NaCCA Weekly Planner", 
-    "🎯 Differentiated Tasks & Quizzes", 
-    "🎨 Improvised TLMs & Media Generator",
-    "❓ FAQ & Teacher Help"
-])
-
-# ==========================================
-# TAB 1: WEEKLY LESSON PLANNER
-# ==========================================
-with tab_plan:
-    col1, col2 = st.columns(2)
-    with col1:
-        class_level = st.selectbox("🎯 Class Level", CLASS_LEVELS, key="plan_class")
-        subject = st.selectbox("📖 Subject", list(CURRICULUM_DATA.keys()), key="plan_sub")
-        strand = st.selectbox("🌿 Strand", list(CURRICULUM_DATA[subject].keys()), key="plan_strand")
-    
-    with col2:
-        sub_strand = st.selectbox("🌱 Sub-Strand", CURRICULUM_DATA[subject][strand], key="plan_substrand")
-        code_prefix = "B" + class_level.split(" ")[1] if "Basic" in class_level else "B7"
-        
-        content_standard = st.selectbox("🔢 Content Standard Code", [f"{code_prefix}.1.1", f"{code_prefix}.1.2", f"{code_prefix}.2.1", f"{code_prefix}.2.2"])
-        indicator_code = st.selectbox("📍 Indicator Code", [f"{content_standard}.1", f"{content_standard}.2", f"{content_standard}.3"])
-
-    st.markdown("---")
-    st.subheader("📅 Weekly Teaching Schedule")
-    selected_days = st.multiselect(
-        "Select the days you teach this lesson:",
-        ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-        default=["Monday", "Wednesday", "Friday"]
-    )
-    
-    if selected_days:
-        st.markdown("**Selected Schedule:** " + " ".join([f'<span class="day-badge">{day}</span>' for day in selected_days]), unsafe_allow_html=True)
-
-    col_dur1, col_dur2 = st.columns(2)
-    with col_dur1:
-        duration = st.selectbox("⏱️ Duration per Lesson", ["30 mins", "45 mins", "60 mins", "70 mins", "90 mins", "100 mins (Double Period)"])
-    with col_dur2:
-        class_size = st.text_input("👥 Class Size", value="40 pupils")
-        
-    topic = st.text_area("✍️ Lesson Topic & Learning Objectives", placeholder="e.g., Identify equivalent fractions using paper folding activities.", height=100)
-
-    if st.button("🚀 Generate Weekly Lesson Plan Table"):
-        if not topic:
-            st.warning("⚠️ Please fill in the Lesson Topic & Objectives.")
-        elif len(selected_days) == 0:
-            st.warning("⚠️ Please select at least one teaching day.")
-        else:
-            with st.spinner("✨ My T.A. is crafting your NaCCA weekly lesson plan..."):
-                try:
-                    client = genai.Client(api_key=st.session_state["api_key"])
-                    days_list_str = ", ".join(selected_days)
-                    num_lessons = len(selected_days)
-                    
-                    prompt = f"""
-                    You are an expert curriculum developer specializing in the Ghanaian NaCCA standard curriculum.
-                    Generate a complete, professionally formatted weekly lesson plan inside a single self-contained HTML document using styled <table> tags.
-
-                    INPUT DETAILS:
-                    - Teacher Name: {st.session_state['teacher_name']}
-                    - Class Level: {class_level}
-                    - Subject: {subject}
-                    - Strand: {strand}
-                    - Sub-Strand: {sub_strand}
-                    - Content Standard Code: {content_standard}
-                    - Indicator Code: {indicator_code}
-                    - Duration per Lesson: {duration}
-                    - Specified Teaching Days: {days_list_str} (Total: {num_lessons} Lessons)
-                    - Class Size: {class_size}
-                    - Topic Details & Objectives: {topic}
-
-                    OUTPUT FORMAT RULES:
-                    1. Return ONLY pure HTML code inside an <html><body> tag.
-                    2. Include CSS styling for clean PDF printing.
-                    3. Top Header: Display title "WEEKLY LESSON PLAN - {class_level.upper()}".
-                    4. Metadata Table: Include Teacher Name, Subject, Class, Strand, Sub-strand, Duration, Content Standard, Indicator Code, Core Competencies, and TLMs.
-                    5. Schedule Table: Generate {num_lessons} separate lesson sections for: {days_list_str}.
-                    6. Structure each day into the 3 NaCCA phases: STARTER, NEW LEARNING/MAIN, REFLECTION.
-                    """
-
-                    response = call_gemini_with_retry(client, prompt)
-                    raw_html = response.text.replace("```html", "").replace("```", "").strip()
-                    
-                    st.success(f"🎉 Generated {num_lessons}-Day Lesson Plan for {days_list_str}!")
-                    st.components.v1.html(raw_html, height=750, scrolling=True)
-                    
-                    st.session_state["history"].append({
-                        "type": "Lesson Plan",
-                        "title": f"{subject} ({class_level})",
-                        "date": days_list_str
-                    })
-
-                except Exception as e:
-                    st.error(f"Error generating lesson plan: {str(e)}")
-
-# ==========================================
-# TAB 2: DIFFERENTIATED TASKS & QUIZZES
-# ==========================================
-with tab_diff:
-    st.subheader("🎯 Differentiated Student Tasks & Quiz Generator")
-    st.write("Generate multi-tier learning tasks (Remedial, Standard, Extension) and an end-of-lesson exit quiz.")
-    
-    diff_topic = st.text_input("Topic or Concept", placeholder="e.g., Equivalent Fractions or States of Matter")
-    diff_class = st.selectbox("Target Class", CLASS_LEVELS, key="diff_class")
-    
-    if st.button("✨ Generate Differentiated Tasks & Quiz"):
-        if not diff_topic:
-            st.warning("Please enter a topic.")
-        else:
-            with st.spinner("My T.A. is building multi-tier exercises and quiz..."):
-                try:
-                    client = genai.Client(api_key=st.session_state["api_key"])
-                    diff_prompt = f"""
-                    Create differentiated classroom tasks and an exit ticket quiz for:
-                    - Topic: {diff_topic}
-                    - Class Level: {diff_class}
-                    """
-                    diff_response = call_gemini_with_retry(client, diff_prompt)
-                    st.markdown(diff_response.text)
-                except Exception as e:
-                    st.error(f"Error generating tasks: {str(e)}")
-
-# ==========================================
-# TAB 3: IMPROVISED LOCAL TLMS & MEDIA
-# ==========================================
-with tab_tlm:
-    st.subheader("🎨 Improvised Local TLMs & Media Generator")
-    st.write("Get zero-cost Ghanaian teaching material ideas and optionally generate classroom charts or PowerPoint slides.")
-    
-    tlm_topic = st.text_input("Topic for Teaching Aids", placeholder="e.g., Human Digestive System or Separation of Mixtures")
-    
-    col_opt1, col_opt2 = st.columns(2)
-    with col_opt1:
-        gen_image = st.checkbox("🖼️ Generate Printable Chart Image", value=False)
-    with col_opt2:
-        gen_ppt = st.checkbox("📊 Generate PowerPoint (.pptx)", value=False)
-    
-    if st.button("💡 Generate Materials & Optional Media"):
-        if not tlm_topic:
-            st.warning("Please enter a topic.")
-        else:
-            with st.spinner("My T.A. is preparing your resources..."):
-                try:
-                    client = genai.Client(api_key=st.session_state["api_key"])
-                    tlm_prompt = f"Provide zero-cost Ghanaian TLM ideas for: {tlm_topic}"
-                    tlm_response = call_gemini_with_retry(client, tlm_prompt)
-                    st.markdown(tlm_response.text)
-                    
-                    if gen_image:
-                        st.markdown("### 🖼️ Generated Classroom Visual Chart")
-                        clean_prompt = f"Educational infographic chart for classroom teaching about {tlm_topic}, clear labels, colorful, high quality"
-                        image_url = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=800&height=500&seed=42"
-                        st.image(image_url, caption=f"Printable Visual Chart: {tlm_topic}", use_container_width=True)
-                except Exception as e:
-                    st.error(f"Error generating TLMs: {str(e)}")
-
- 
