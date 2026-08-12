@@ -13,43 +13,79 @@ except Exception:
 
 # 1. Page Configuration
 st.set_page_config(
-    page_title="My T.A. | AI Teaching Assistant",
+    page_title="My T.A. | Smart AI Teaching Assistant",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for TeachAI-inspired Theme
+# 2. Advanced Custom CSS Styling
 st.markdown("""
 <style>
-    /* Main Background */
+    /* Global Styling */
     .stApp {
         background-color: #F8FAFC;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    
-    /* My T.A. Hero Banner */
-    .hero-banner {
+
+    /* Custom Header / Navbar */
+    .nav-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
-        color: white;
-        padding: 28px;
+        padding: 16px 28px;
         border-radius: 16px;
         margin-bottom: 24px;
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-        text-align: center;
+        box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.2);
     }
-    .hero-banner h1 {
+    .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .nav-brand h1 {
         color: #38BDF8 !important;
-        margin: 4px 0 6px 0;
-        font-size: 34px;
-        font-weight: 800;
+        font-size: 26px !important;
+        font-weight: 800 !important;
+        margin: 0 !important;
         letter-spacing: -0.5px;
     }
-    .hero-banner p {
+    .nav-brand span {
         color: #94A3B8;
-        margin: 0;
-        font-size: 15px;
+        font-size: 13px;
+        background: rgba(255,255,255,0.08);
+        padding: 4px 10px;
+        border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.1);
     }
-    
+
+    /* Stats Banner */
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 18px;
+        text-align: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        border: 1px solid #E2E8F0;
+        transition: transform 0.2s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+    }
+    .stat-val {
+        font-size: 24px;
+        font-weight: 800;
+        color: #0284C7;
+    }
+    .stat-lbl {
+        font-size: 12px;
+        color: #64748B;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-top: 4px;
+    }
+
     /* Buttons */
     .stButton>button {
         width: 100%;
@@ -61,12 +97,14 @@ st.markdown("""
         border-radius: 10px !important;
         border: none !important;
         box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25) !important;
+        transition: all 0.2s ease !important;
     }
     .stButton>button:hover {
         background: linear-gradient(135deg, #0369A1 0%, #075985 100%) !important;
+        transform: translateY(-1px);
     }
 
-    /* Day Badges */
+    /* Badges & Cards */
     .day-badge {
         background-color: #E0F2FE;
         color: #0369A1;
@@ -79,19 +117,18 @@ st.markdown("""
         margin-right: 6px;
     }
     
-    /* Level Cards for Differentiation */
-    .level-card {
-        background-color: white;
+    .testimonial-card {
+        background: white;
         padding: 16px;
-        border-radius: 10px;
-        border-left: 5px solid #0284C7;
+        border-radius: 12px;
+        border-left: 4px solid #38BDF8;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
         margin-bottom: 12px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 </style>
 """, unsafe_allow_html=True)
 
-# 2. Session State Management
+# 3. Session State
 if "authenticated" not in st.session_state:
     st.session_state["authenticated"] = False
     st.session_state["teacher_name"] = ""
@@ -99,40 +136,39 @@ if "authenticated" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state["history"] = []
 
-# Helper Function: Robust API Call with Auto-Retry for 503 Spikes
+# Helper Function: API Call with Auto-Retry
 def call_gemini_with_retry(client, prompt, max_retries=3):
     for attempt in range(max_retries):
         try:
-            response = client.models.generate_content(
-                model='gemini-3.6-flash',
+            return client.models.generate_content(
+                model='gemini-2.5-flash',
                 contents=prompt
             )
-            return response
         except Exception as e:
             if ("503" in str(e) or "UNAVAILABLE" in str(e)) and attempt < max_retries - 1:
-                time.sleep(2)  # Pause 2 seconds before retrying
+                time.sleep(2)
                 continue
             else:
                 raise e
 
-# LOGIN SCREEN
+# 4. LOGIN SCREEN
 if not st.session_state["authenticated"]:
     st.markdown("""
-    <div class="hero-banner">
-        <div style="font-size: 54px;">🤖📚</div>
-        <h1>My T.A.</h1>
-        <p>Your Smart AI Teaching Assistant for NaCCA Lesson Planning & Class Prep</p>
+    <div class="nav-container" style="justify-content: center; text-align: center; flex-direction: column; padding: 36px;">
+        <div style="font-size: 54px; margin-bottom: 8px;">🤖📚</div>
+        <h1 style="color: #38BDF8; font-size: 38px; font-weight: 800; margin: 0;">My T.A.</h1>
+        <p style="color: #94A3B8; font-size: 16px; margin-top: 6px;">Your Smart AI Teaching Assistant for Ghanaian NaCCA Curriculum Prep</p>
     </div>
     """, unsafe_allow_html=True)
     
-    col_login1, col_login2, col_login3 = st.columns([1, 2, 1])
-    with col_login2:
+    col_l1, col_l2, col_l3 = st.columns([1, 2, 1])
+    with col_l2:
         st.subheader("🔐 Teacher Portal Login")
-        st.info("Enter your Teacher Name and Gemini API Key to log in.")
+        st.info("Enter your Teacher Name and Gemini API Key to access your workspace.")
         
         teacher_name = st.text_input("👤 Teacher Name", placeholder="e.g., Mr. Mensah")
         api_key_input = st.text_input("🔑 Gemini API Key", type="password", placeholder="Paste your key here...")
-        st.markdown("[Get a free Gemini API Key here](https://aistudio.google.com/)")
+        st.markdown("👉 [Get a free Gemini API Key here](https://aistudio.google.com/)")
         
         if st.button("🚀 Enter Studio"):
             if not teacher_name or not api_key_input:
@@ -144,7 +180,9 @@ if not st.session_state["authenticated"]:
                 st.rerun()
     st.stop()
 
-# 3. LOGGED-IN STUDIO APP
+# 5. LOGGED-IN STUDIO APP
+
+# Sidebar Dashboard & History
 with st.sidebar:
     st.markdown(f"### 👋 Welcome, **{st.session_state['teacher_name']}**")
     st.success("My T.A. Active 🟢")
@@ -165,44 +203,41 @@ with st.sidebar:
             st.markdown(f"**{idx+1}. {item['type']}**")
             st.caption(f"{item['title']} ({item['date']})")
 
-# Top Banner
+# Top Navbar Header
 st.markdown(f"""
-<div class="hero-banner">
-    <div style="font-size: 42px;">🤖</div>
-    <h1>My T.A. Studio</h1>
-    <p>Assistant: <strong>{st.session_state['teacher_name']}</strong> | Standard NaCCA Curriculum (Basic 1–9)</p>
+<div class="nav-container">
+    <div class="nav-brand">
+        <div style="font-size: 32px;">🤖</div>
+        <div>
+            <h1>My T.A. Studio</h1>
+            <span style="color:#94A3B8; font-size:12px;">Assistant: {st.session_state['teacher_name']} | NaCCA Standard-Based & CCP</span>
+        </div>
+    </div>
+    <div>
+        <span style="color:#38BDF8; background:rgba(56, 189, 248, 0.1); padding:6px 12px; border-radius:20px; font-size:13px; border:1px solid rgba(56, 189, 248, 0.3);">
+            Basic 1 – Basic 9 (JHS 3)
+        </span>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
-# Helper Functions
-def create_docx(text, title):
-    doc = Document()
-    doc.add_heading(title, level=1)
-    for line in text.split('\n'):
-        if line.startswith('### '):
-            doc.add_heading(line.replace('### ', ''), level=3)
-        elif line.startswith('## '):
-            doc.add_heading(line.replace('## ', ''), level=2)
-        elif line.startswith('# '):
-            doc.add_heading(line.replace('# ', ''), level=1)
-        else:
-            doc.add_paragraph(line)
-            
-    buffer = io.BytesIO()
-    doc.save(buffer)
-    buffer.seek(0)
-    return buffer
+# Quick Metrics Row
+c1, c2, c3, c4 = st.columns(4)
+with c1:
+    st.markdown("""<div class="stat-card"><div class="stat-val">9</div><div class="stat-lbl">Core NaCCA Subjects</div></div>""", unsafe_allow_html=True)
+with c2:
+    st.markdown("""<div class="stat-card"><div class="stat-val">B1 – B9</div><div class="stat-lbl">Class Levels Supported</div></div>""", unsafe_allow_html=True)
+with c3:
+    st.markdown("""<div class="stat-card"><div class="stat-val">&lt; 10s</div><div class="stat-lbl">Generation Time</div></div>""", unsafe_allow_html=True)
+with c4:
+    st.markdown("""<div class="stat-card"><div class="stat-val">100% Free</div><div class="stat-lbl">With Gemini Key</div></div>""", unsafe_allow_html=True)
 
-def create_pdf(html_code):
-    buffer = io.BytesIO()
-    HTML(string=html_code).write_pdf(target=buffer)
-    buffer.seek(0)
-    return buffer
+st.markdown("<br>", unsafe_allow_html=True)
 
-# Updated Curriculum Data Dictionary with All NaCCA Subjects
+# Curriculum Data
 CURRICULUM_DATA = {
     "Mathematics": {
-        "Number": ["Whole Numbers & Place Value", "Number Operations", "Fractions, Decimals & Percentages", "Ratios & Proportions"],
+        "Number": ["Whole Numbers, Place Value & Operations", "Fractions, Decimals & Percentages", "Ratios & Proportions"],
         "Algebra": ["Patterns & Relationships", "Algebraic Expressions & Equations"],
         "Geometry & Measurement": ["Lines, Shapes & 3D Objects", "Position & Transformation", "Perimeter, Area & Volume"],
         "Data & Probability": ["Data Collection & Presentation", "Data Analysis & Probability"]
@@ -263,11 +298,12 @@ CURRICULUM_DATA = {
 
 CLASS_LEVELS = ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6", "Basic 7 (JHS 1)", "Basic 8 (JHS 2)", "Basic 9 (JHS 3)"]
 
-# MAIN WORKSPACE TABS
-tab_plan, tab_diff, tab_tlm = st.tabs([
+# MAIN WORKSPACE TABS WITH ICONS
+tab_plan, tab_diff, tab_tlm, tab_faq = st.tabs([
     "📚 NaCCA Weekly Planner", 
     "🎯 Differentiated Tasks & Quizzes", 
-    "🎨 Improvised TLMs & Visuals"
+    "🎨 Improvised TLMs & Media Generator",
+    "❓ FAQ & Teacher Help"
 ])
 
 # ==========================================
@@ -288,9 +324,9 @@ with tab_plan:
         indicator_code = st.selectbox("📍 Indicator Code", [f"{content_standard}.1", f"{content_standard}.2", f"{content_standard}.3"])
 
     st.markdown("---")
-    st.subheader("📅 Weekly Teaching Days")
+    st.subheader("📅 Weekly Teaching Schedule")
     selected_days = st.multiselect(
-        "Select the days you are teaching this lesson:",
+        "Select the days you teach this lesson:",
         ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
         default=["Monday", "Wednesday", "Friday"]
     )
@@ -335,26 +371,16 @@ with tab_plan:
                     - Class Size: {class_size}
                     - Topic Details & Objectives: {topic}
 
-                    SPECIAL INSTRUCTION FOR AI INFERENCE:
-                    1. AUTOMATICALLY GENERATE appropriate Teaching & Learning Materials (TLMs) suited for a Ghanaian classroom based on the topic.
-                    2. AUTOMATICALLY GENERATE relevant NaCCA Core Competencies (e.g., Critical Thinking, Collaboration, Communication, Digital Literacy) aligned with the objectives.
-
                     OUTPUT FORMAT RULES:
-                    1. Return ONLY pure HTML code inside an <html><body> tag. Do NOT wrap it in Markdown code blocks.
-                    2. Include CSS styling for clean PDF printing (border-collapse, clean blue header banner `#0F172A`, padding, clear borders `#CBD5E1`, A4 page layout).
-                    3. Top Header: Display ONLY the title "WEEKLY LESSON PLAN - {class_level.upper()}" in the top banner. Do NOT include "Ministry of Education" or "Ghana Education Service".
-                    4. Metadata Table: Include Teacher Name ({st.session_state['teacher_name']}), Subject, Class, Strand, Sub-strand, Duration, Content Standard, Indicator Code, Core Competencies, and TLMs.
-                    5. Schedule Table: Generate exactly {num_lessons} separate lesson sections corresponding to: {days_list_str}.
-                    6. Structure each day's lesson into the 3 mandatory NaCCA phases:
-                       - PHASE 1: STARTER (Preparing the brain / revision - 10 mins)
-                       - PHASE 2: NEW LEARNING / MAIN (Step-by-step learner activities, group work, inline assessment questions)
-                       - PHASE 3: REFLECTION / PLENARY (Learner feedback & summary)
-                    7. Add a Teacher Evaluation & Remarks box at the bottom.
+                    1. Return ONLY pure HTML code inside an <html><body> tag.
+                    2. Include CSS styling for clean PDF printing.
+                    3. Top Header: Display title "WEEKLY LESSON PLAN - {class_level.upper()}".
+                    4. Metadata Table: Include Teacher Name, Subject, Class, Strand, Sub-strand, Duration, Content Standard, Indicator Code, Core Competencies, and TLMs.
+                    5. Schedule Table: Generate {num_lessons} separate lesson sections for: {days_list_str}.
+                    6. Structure each day into the 3 NaCCA phases: STARTER, NEW LEARNING/MAIN, REFLECTION.
                     """
 
-                    # Using auto-retry helper
                     response = call_gemini_with_retry(client, prompt)
-                    
                     raw_html = response.text.replace("```html", "").replace("```", "").strip()
                     
                     st.success(f"🎉 Generated {num_lessons}-Day Lesson Plan for {days_list_str}!")
@@ -365,27 +391,6 @@ with tab_plan:
                         "title": f"{subject} ({class_level})",
                         "date": days_list_str
                     })
-                    
-                    col_d1, col_d2 = st.columns(2)
-                    with col_d1:
-                        if PDF_SUPPORT:
-                            pdf_bytes = create_pdf(raw_html)
-                            st.download_button(
-                                label="📄 Download Printable PDF Table",
-                                data=pdf_bytes,
-                                file_name=f"Lesson_Plan_{class_level}_{subject}.pdf",
-                                mime="application/pdf"
-                            )
-                        else:
-                            st.warning("PDF engine loading...")
-                    with col_d2:
-                        docx_file = create_docx(topic, f"{subject} - {topic} Lesson Plan")
-                        st.download_button(
-                            label="📥 Download Word Document (.docx)",
-                            data=docx_file,
-                            file_name=f"Lesson_Plan_{class_level}_{subject}.docx",
-                            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        )
 
                 except Exception as e:
                     st.error(f"Error generating lesson plan: {str(e)}")
@@ -395,7 +400,7 @@ with tab_plan:
 # ==========================================
 with tab_diff:
     st.subheader("🎯 Differentiated Student Tasks & Quiz Generator")
-    st.write("Generate tailored activities for different pupil learning speeds plus an end-of-lesson assessment.")
+    st.write("Generate multi-tier learning tasks (Remedial, Standard, Extension) and an end-of-lesson exit quiz.")
     
     diff_topic = st.text_input("Topic or Concept", placeholder="e.g., Equivalent Fractions or States of Matter")
     diff_class = st.selectbox("Target Class", CLASS_LEVELS, key="diff_class")
@@ -408,63 +413,30 @@ with tab_diff:
                 try:
                     client = genai.Client(api_key=st.session_state["api_key"])
                     diff_prompt = f"""
-                    You are a Ghanaian NaCCA primary/JHS education expert.
                     Create differentiated classroom tasks and an exit ticket quiz for:
                     - Topic: {diff_topic}
                     - Class Level: {diff_class}
-
-                    Format the output cleanly in Markdown:
-                    ## 🟢 Tier 1: Basic / Remedial Support Tasks (For pupils needing guidance)
-                    (Provide 3 simple guided tasks using concrete objects or step-by-step visuals)
-
-                    ## 🟡 Tier 2: Standard Classwork Tasks (Grade-level standard)
-                    (Provide 3 core curriculum exercise questions)
-
-                    ## 🔴 Tier 3: Extension / Fast Learner Tasks (For high achievers)
-                    (Provide 2 problem-solving or critical thinking word problems)
-
-                    ---
-                    ## 📝 5-Question Exit Ticket / Quiz
-                    (5 multiple choice or short answer questions)
-
-                    ## 🔑 Answer Key & Teacher Notes
-                    (Solutions for quick grading)
                     """
-                    
                     diff_response = call_gemini_with_retry(client, diff_prompt)
-                    
                     st.markdown(diff_response.text)
-                    
-                    st.session_state["history"].append({
-                        "type": "Differentiated Tasks",
-                        "title": f"{diff_topic} ({diff_class})",
-                        "date": "Today"
-                    })
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
 
 # ==========================================
-# TAB 3: IMPROVISED LOCAL TLMS, MEDIA & PPT
+# TAB 3: IMPROVISED LOCAL TLMS & MEDIA
 # ==========================================
 with tab_tlm:
     st.subheader("🎨 Improvised Local TLMs & Media Generator")
-    st.write("Get low-cost Ghanaian classroom material ideas and optionally generate classroom charts, videos, or PowerPoint slides.")
+    st.write("Get zero-cost Ghanaian teaching material ideas and optionally generate classroom charts or PowerPoint slides.")
     
     tlm_topic = st.text_input("Topic for Teaching Aids", placeholder="e.g., Human Digestive System or Separation of Mixtures")
     
-    st.markdown("---")
-    st.markdown("##### ⚙️ Optional Media & Content Generation")
-    
-    col_opt1, col_opt2, col_opt3 = st.columns(3)
+    col_opt1, col_opt2 = st.columns(2)
     with col_opt1:
         gen_image = st.checkbox("🖼️ Generate Printable Chart Image", value=False)
     with col_opt2:
         gen_ppt = st.checkbox("📊 Generate PowerPoint (.pptx)", value=False)
-    with col_opt3:
-        gen_video_idea = st.checkbox("🎥 Generate Animated Video Visualizer", value=False)
     
-    st.markdown("---")
-
     if st.button("💡 Generate Materials & Optional Media"):
         if not tlm_topic:
             st.warning("Please enter a topic.")
@@ -472,80 +444,11 @@ with tab_tlm:
             with st.spinner("My T.A. is preparing your resources..."):
                 try:
                     client = genai.Client(api_key=st.session_state["api_key"])
-                    
-                    tlm_prompt = f"""
-                    Provide creative teaching resources for Ghanaian schools for the topic: "{tlm_topic}".
-                    Include:
-                    1. 📦 **Improvised Low-Cost / Zero-Cost TLMs:** Ideas using everyday Ghanaian items (bottle caps, manila cards, plastic bottles, local seeds, cardboard).
-                    2. 🛠️ **How to Construct & Use Them:** Simple step-by-step instructions for teachers and pupils.
-                    3. 📝 **Key Lesson Presentation Outline:** 3 to 4 core points for classroom teaching.
-                    """
-                    
+                    tlm_prompt = f"Provide zero-cost Ghanaian TLM ideas for: {tlm_topic}"
                     tlm_response = call_gemini_with_retry(client, tlm_prompt)
                     st.markdown(tlm_response.text)
                     
-                    # 🖼️ OPTIONAL 1: Direct Image Generation
                     if gen_image:
                         st.markdown("### 🖼️ Generated Classroom Visual Chart")
-                        # Create an encoded image query for Pollinations AI (free image generator)
-                        clean_prompt = f"Educational infographic chart for classroom teaching about {tlm_topic}, clear labels, colorful, high quality"
-                        image_url = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=800&height=500&seed=42"
-                        st.image(image_url, caption=f"Printable Visual Chart: {tlm_topic}", use_container_width=True)
-                        st.info("💡 Tip: Right-click or long-press the image above to save and print for your classroom!")
-
-                    # 🎥 OPTIONAL 2: Video Visualizer Link / Video Storyboard
-                    if gen_video_idea:
-                        st.markdown("### 🎥 Animated Video Concept & Stream")
-                        st.video("https://www.youtube.com/watch?v=dQw4w9WgXcQ") # Example preview container
-                        st.caption(f"Interactive animated visual aid concept generated for: **{tlm_topic}**")
-
-                    # 📊 OPTIONAL 3: PowerPoint Generation (.pptx)
-                    if gen_ppt:
-                        st.markdown("### 📊 Downloadable PowerPoint Slides")
-                        from pptx import Presentation
-                        from pptx.util import Inches, Pt
-                        import io
-
-                        prs = Presentation()
-                        
-                        # Title Slide
-                        title_slide_layout = prs.slide_layouts[0]
-                        slide = prs.slides.add_slide(title_slide_layout)
-                        title = slide.shapes.title
-                        subtitle = slide.placeholders[1]
-                        title.text = tlm_topic
-                        subtitle.text = "NaCCA Lesson Visual & Teaching Aids Guide\nGenerated by My T.A."
-
-                        # Content Slide
-                        bullet_slide_layout = prs.slide_layouts[1]
-                        slide2 = prs.slides.add_slide(bullet_slide_layout)
-                        shapes = slide2.shapes
-                        title_shape = shapes.title
-                        body_shape = shapes.placeholders[1]
-                        title_shape.text = f"Key Concepts: {tlm_topic}"
-                        
-                        tf = body_shape.text_frame
-                        tf.text = f"Teaching Guide for {tlm_topic}"
-                        p = tf.add_paragraph()
-                        p.text = "1. Improvised Local Materials & Construction"
-                        p2 = tf.add_paragraph()
-                        p2.text = "2. Classroom Demonstration & Activity"
-                        p3 = tf.add_paragraph()
-                        p3.text = "3. Evaluation & Key Takeaways"
-
-                        # Save PPTX to Bytes buffer for download button
-                        ppt_buffer = io.BytesIO()
-                        prs.save(ppt_buffer)
-                        ppt_buffer.seek(0)
-
-                        st.download_button(
-                            label="📥 Download PowerPoint Presentation (.pptx)",
-                            data=ppt_buffer,
-                            file_name=f"{tlm_topic.replace(' ', '_')}_Lesson.pptx",
-                            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
-                        )
-
-                except Exception as e:
-                    st.error(f"Error generating resources: {str(e)}")
-    
+                        clean_prompt = f"Educational infographic chart     
                     
