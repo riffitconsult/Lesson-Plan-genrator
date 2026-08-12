@@ -429,7 +429,7 @@ with tab_diff:
                     diff_response = call_gemini_with_retry(client, diff_prompt)
                     st.markdown(diff_response.text)
                 except Exception as e:
-                    st.error(f"Error: {str(e)}")
+                    st.error(f"Error generating tasks: {str(e)}")
 
 # ==========================================
 # TAB 3: IMPROVISED LOCAL TLMS & MEDIA
@@ -453,4 +453,4 @@ with tab_tlm:
             with st.spinner("My T.A. is preparing your resources..."):
                 try:
                     client = genai.Client(api_key=st.session_state["api_key"])
-                  
+ 
