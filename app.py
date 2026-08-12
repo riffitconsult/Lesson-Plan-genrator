@@ -447,8 +447,9 @@ with tab_tlm:
                     tlm_prompt = f"Provide zero-cost Ghanaian TLM ideas for: {tlm_topic}"
                     tlm_response = call_gemini_with_retry(client, tlm_prompt)
                     st.markdown(tlm_response.text)
-                    
                     if gen_image:
-                        st.markdown("### 🖼️ Generated Classroom Visual Chart")
-                        clean_prompt = f"Educational infographic chart     
-                    
+    st.markdown("### 🖼️ Generated Classroom Visual Chart")
+    clean_prompt = f"Educational infographic chart for classroom teaching about {tlm_topic}, clear labels, colorful, high quality"
+    image_url = f"https://pollinations.ai/p/{clean_prompt.replace(' ', '%20')}?width=800&height=500&seed=42"
+    st.image(image_url, caption=f"Printable Visual Chart: {tlm_topic}", use_container_width=True)
+
