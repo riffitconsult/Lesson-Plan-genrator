@@ -303,7 +303,6 @@ tab_plan, tab_diff, tab_tlm, tab_faq = st.tabs([
     "📚 NaCCA Weekly Planner", 
     "🎯 Differentiated Tasks & Quizzes", 
     "🎨 Improvised TLMs & Media Generator",
-    "❓ FAQ & Teacher Help"
 ])
 
 # ==========================================
