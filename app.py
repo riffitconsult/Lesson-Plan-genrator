@@ -13,7 +13,7 @@ st.set_page_config(
 )
 
 # ==========================================
-# 2. RESPONSIVE CSS STYLING
+# 2. CUSTOM CSS & RESPONSIVE STYLING
 # ==========================================
 st.markdown("""
 <style>
@@ -23,13 +23,13 @@ st.markdown("""
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
-    /* Top Navigation Bar */
+    /* Top Navigation Header Bar */
     .top-navbar {
         display: flex;
         justify-content: space-between;
         align-items: center;
         background-color: #FFFFFF;
-        padding: 12px 24px;
+        padding: 14px 24px;
         border-radius: 12px;
         border: 1px solid #E2E8F0;
         margin-bottom: 20px;
@@ -46,15 +46,10 @@ st.markdown("""
         font-weight: 500;
     }
 
-    /* Sidebar Navigation Padding */
-    div[data-testid="stSidebarNav"] {
-        padding-top: 10px;
-    }
-    
-    /* Card Styling */
+    /* Custom Dashboard Card */
     .dashboard-card {
         background-color: #FFFFFF;
-        padding: 20px;
+        padding: 18px;
         border-radius: 12px;
         border: 1px solid #E2E8F0;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -99,54 +94,99 @@ def call_gemini_with_retry(client, prompt, max_retries=3):
                 raise e
 
 # ==========================================
-# 4. MASTER CURRICULUM DATA
+# 4. MASTER CURRICULUM DATA (STANDARD BASE & CCP)
 # ==========================================
 CURRICULUM_DATA = {
-    "Mathematics": {
-        "Number": ["Whole Numbers, Place Value & Operations", "Fractions, Decimals & Percentages"],
-        "Algebra": ["Patterns & Relationships", "Algebraic Expressions & Equations"],
-        "Geometry & Measurement": ["Lines, Shapes & 3D Objects", "Perimeter, Area & Volume"],
-        "Data & Probability": ["Data Collection & Presentation", "Data Analysis & Probability"]
+    "Standard Base-Curriculum (Basic 1 - 6)": {
+        "French Language": {
+            "Oral Expression & Comprehension": ["Greetings & Self-Introduction", "School & Family Vocabulary", "Daily Directives"],
+            "Reading Comprehension": ["Simple Texts & Dialogues", "Vocabulary Building"],
+            "Written Expression": ["Short Sentences & Descriptions", "Grammar & Conjugation"]
+        },
+        "Mathematics": {
+            "Number": ["Whole Numbers, Place Value & Operations", "Fractions, Decimals & Percentages"],
+            "Algebra": ["Patterns & Relationships", "Simple Equations"],
+            "Geometry & Measurement": ["Lines, Shapes & 3D Objects", "Perimeter, Area & Volume"],
+            "Data": ["Data Collection & Presentation"]
+        },
+        "Science": {
+            "Diversity of Matter": ["Living and Non-Living Things", "Materials & Mixtures"],
+            "Cycles": ["Earth Science & Weather", "Life Cycles of Organisms"],
+            "Systems": ["Human Body Systems", "Plant Systems", "Ecosystems"],
+            "Forces & Energy": ["Sources of Energy", "Simple Machines"]
+        },
+        "English Language": {
+            "Oral Language": ["Listening & Speaking", "Pronunciation & Rhymes"],
+            "Reading": ["Phonics & Vocabulary", "Comprehension"],
+            "Writing": ["Penmanship", "Creative Writing", "Grammar"]
+        },
+        "Our World Our People (OWOP)": {
+            "All About Us": ["Nature of God", "Self & Family"],
+            "All Around Us": ["Environment", "Plants & Animals"],
+            "Our Beliefs & Values": ["Moral Values", "Cultural Diversity"]
+        },
+        "Religious & Moral Education (RME)": {
+            "God, Creation & Attributes": ["Creator & Environment"],
+            "Religious Practices": ["Prayer & Worship"],
+            "Moral Life": ["Honesty & Good Manners"]
+        },
+        "Creative Arts": {
+            "Visual Arts": ["Drawing & Painting", "Crafts & Modelling"],
+            "Performing Arts": ["Music & Dance", "Drama & Storytelling"]
+        }
     },
-    "Science": {
-        "Diversity of Matter": ["Living and Non-Living Things", "Materials & Mixtures", "States of Matter"],
-        "Cycles": ["Earth Science & Weather", "Life Cycles of Organisms"],
-        "Systems": ["Human Body Systems", "Plant Systems", "Ecosystems"],
-        "Forces and Energy": ["Sources & Forces of Motion", "Electricity & Magnetism"]
-    },
-    "French Language": {
-        "Oral Expression & Comprehension": ["Greetings & Self-Introduction", "School & Family Vocabulary", "Daily Directives"],
-        "Reading Comprehension": ["Simple Texts & Dialogues", "Vocabulary Building"],
-        "Written Expression": ["Short Sentences & Descriptions", "Grammar & Conjugation"]
-    },
-    "English Language": {
-        "Oral Language": ["Listening & Speaking", "Pronunciation & Intonation", "Storytelling & Poems"],
-        "Reading": ["Phonics & Vocabulary", "Comprehension Strategies", "Silent Reading"],
-        "Writing": ["Penmanship & Sentence Structure", "Composition & Creative Writing", "Grammar & Usage"],
-        "Literature": ["Folktales, Plays & Poetry Analysis"]
-    },
-    "Ghanaian Language & Culture": {
-        "Oral Language": ["Greeting & Customary Manners", "Proverbs & Folktales"],
-        "Reading & Comprehension": ["Local Language Texts & Orthography"],
-        "Culture & Heritage": ["Rites of Passage", "Traditional Governance & Values"]
-    },
-    "Career Technology": {
-        "Health and Safety": ["Personal & Workshop Safety", "Food Hygiene"],
-        "Materials for Production": ["Wood, Metal, Plastics", "Food Commodities & Processing"],
-        "Tools & Processes": ["Measuring & Marking Out Tools", "Cutting & Shaping Tools"]
-    },
-    "Religious & Moral Education (RME)": {
-        "God, Creation & Attributes": ["Attributes of God", "Environment & Stewardship"],
-        "Religious Practices": ["Worship Practices", "Religious Festivals"],
-        "Moral Life": ["Honesty, Integrity & Manners"]
-    },
-    "Social Studies": {
-        "Environment": ["Physical & Social Environment", "Map Work"],
-        "Family & Community": ["Roles in Family & Community", "Governance & Citizenship"]
-    },
-    "Computing": {
-        "Introduction to Computing": ["Hardware & Peripheral Devices", "Operating Systems"],
-        "Applications": ["Word Processing & Spreadsheets", "Web Browsing & E-Safety"]
+    "Common Core Programme (CCP) (Basic 7 - 9 / JHS 1 - 3)": {
+        "French Language (CCP)": {
+            "Compréhension Orale": ["Écouter et comprendre des messages oraux", "Dialogues et interactions"],
+            "Production Orale": ["S'exprimer sur des sujets familiers", "Exposés simples"],
+            "Compréhension Écrite": ["Lecture et analyse de textes simples", "Identification d'informations"],
+            "Production Écrite": ["Rédaction de courts paragraphes", "Correspondance et messages"]
+        },
+        "Mathematics (CCP)": {
+            "Number": ["Real Number System", "Ratios, Rates & Proportions", "Financial Mathematics"],
+            "Algebra": ["Algebraic Expressions", "Linear Equations & Inequalities", "Functions & Graphs"],
+            "Geometry & Measurement": ["Geometric Constructions", "Trigonometry & Bearing", "Mensuration"],
+            "Handling Data": ["Data Collection & Presentation", "Data Analysis", "Probability"]
+        },
+        "Science (CCP)": {
+            "Diversity of Matter": ["Structure of Matter", "Elements, Compounds & Mixtures", "Chemical Reactions"],
+            "Cycles": ["Earth & Space Science", "Life Processes & Cycles"],
+            "Systems": ["Human Body Systems", "Ecosystems & Interactions"],
+            "Forces & Energy": ["Energy Transformations", "Electricity & Magnetism", "Forces & Motion"]
+        },
+        "English Language (CCP)": {
+            "Oral Language": ["Listening Comprehension", "Speaking & Presentation"],
+            "Reading": ["Reading Comprehension", "Literary Appreciation"],
+            "Writing": ["Expository & Narrative Essays", "Formal & Informal Letters"],
+            "Language Conventions": ["Grammar", "Punctuation & Vocabulary"]
+        },
+        "Social Studies (CCP)": {
+            "Environment": ["Physical Environment", "Environmental Degradation & Conservation"],
+            "Governance, Politics & Stability": ["Citizenship & Governance", "Peace & Conflict Resolution"],
+            "Social & Economic Development": ["Socio-Economic Infrastructure", "Population & Resources"]
+        },
+        "Career Technology (CCP)": {
+            "Health & Safety": ["Personal & Workshop Safety", "Food Hygiene & Sanitation"],
+            "Materials for Production": ["Wood, Metal & Plastics", "Food Commodities"],
+            "Tools & Equipment": ["Measuring & Marking Out Tools", "Processing Tools"],
+            "Designing & Making": ["Design Process & Drawing", "Prototyping"]
+        },
+        "Computing (CCP)": {
+            "Introduction to Computing": ["Hardware Components", "Operating Systems & File Management"],
+            "Productivity Software": ["Word Processing", "Spreadsheet Applications", "Presentations"],
+            "Communication & Web": ["Internet & Web Browsing", "Cybersecurity & Ethics"],
+            "Computational Thinking": ["Algorithms & Basic Programming"]
+        },
+        "Religious & Moral Education (CCP)": {
+            "God, His Creation & Attributes": ["Attributes of God", "Stewardship of the Earth"],
+            "Religious Practices & Personalities": ["Religious Leaders", "Festivals & Rites"],
+            "Ethics, Manners & Family": ["Moral Values & Character", "Family Roles & Social Responsibility"]
+        },
+        "Creative Arts & Design (CCP)": {
+            "Design": ["Design Process & Technical Drawing"],
+            "Visual Arts": ["2D & 3D Artwork", "Local Crafts"],
+            "Performing Arts": ["Music Composition & Performance", "Dance & Theatre"]
+        }
     }
 }
 
@@ -172,40 +212,7 @@ if not st.session_state["authenticated"]:
     st.stop()
 
 # ==========================================
-# 6. NAVIGATION SIDEBAR
-# ==========================================
-with st.sidebar:
-    st.markdown("### 📘 **PlanAhead**")
-    st.caption(f"Logged in: {st.session_state['teacher_name']}")
-    st.divider()
-
-    nav_choice = st.radio(
-        "NAVIGATION",
-        [
-            "📝 Lesson Plan Generator",
-            "🎯 Differentiated Tasks & Quizzes",
-            "🎨 Improvised TLMs & Visuals",
-            "❓ FAQ"
-        ]
-    )
-
-    st.divider()
-    
-    st.markdown("### 🕒 **Recent Plans**")
-    if len(st.session_state["history"]) == 0:
-        st.caption("• French (Basic 8) - Salutations")
-        st.caption("• Basic 7 Science - Ecosystems")
-    else:
-        for item in st.session_state["history"][-5:]:
-            st.caption(f"• {item['title']}")
-
-    st.divider()
-    if st.button("🚪 Logout"):
-        st.session_state["authenticated"] = False
-        st.rerun()
-
-# ==========================================
-# 7. TOP HEADER NAVBAR
+# 6. HEADER NAVBAR
 # ==========================================
 st.markdown(f"""
 <div class="top-navbar">
@@ -214,36 +221,66 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+# Sidebar (For desktop view recent items & profile settings)
+with st.sidebar:
+    st.markdown("### 🕒 **Recent Plans**")
+    if len(st.session_state["history"]) == 0:
+        st.caption("• French (CCP Basic 8) - Dialogues")
+        st.caption("• Science (Base Basic 5) - Ecosystems")
+    else:
+        for item in st.session_state["history"][-5:]:
+            st.caption(f"• {item['title']}")
+    
+    st.divider()
+    if st.button("🚪 Logout"):
+        st.session_state["authenticated"] = False
+        st.rerun()
+
 # ==========================================
-# 8. ROUTING BASED ON SIDEBAR SELECTION
+# 7. NAVIGATION (3 CORE SECTIONS)
 # ==========================================
 
-# --- PAGE 1: LESSON PLAN GENERATOR ---
-if nav_choice == "📝 Lesson Plan Generator":
-    
+tab_lesson, tab_diff, tab_tlm = st.tabs([
+    "📝 Lesson Plan Generator",
+    "🎯 Differentiated Tasks & Quizzes",
+    "🎨 Improvised TLMs & Visuals"
+])
+
+# ------------------------------------------
+# TAB 1: LESSON PLAN GENERATOR
+# ------------------------------------------
+with tab_lesson:
     col_left, col_middle, col_right = st.columns([1.2, 1.5, 1])
 
-    # Left Column: Inputs, Language & Community Context
     with col_left:
         st.markdown("### Step 1: Lesson Details")
         
+        # Output Language (Supports French Teachers)
         plan_language = st.selectbox(
             "🌐 Output Language", 
             ["English 🇬🇧", "Français 🇫🇷 (French)", "English with French Terminology"]
         )
-        
-        subject = st.selectbox("Subject", list(CURRICULUM_DATA.keys()))
-        strand = st.selectbox("Strand", list(CURRICULUM_DATA[subject].keys()))
-        topic_input = st.text_input("Topic", value="Se présenter et saluer / Greetings")
-        
+
         grade_level = st.selectbox("Grade Level", CLASS_LEVELS)
+        
+        # Dynamically switch between Base-Curriculum and CCP based on selected Grade Level
+        if "Basic 7" in grade_level or "Basic 8" in grade_level or "Basic 9" in grade_level:
+            programme_type = "Common Core Programme (CCP) (Basic 7 - 9 / JHS 1 - 3)"
+            st.info("📋 Curriculum Framework: Common Core Programme (CCP)")
+        else:
+            programme_type = "Standard Base-Curriculum (Basic 1 - 6)"
+            st.info("📋 Curriculum Framework: Standard Base-Curriculum")
+
+        subject = st.selectbox("Subject", list(CURRICULUM_DATA[programme_type].keys()))
+        strand = st.selectbox("Strand", list(CURRICULUM_DATA[programme_type][subject].keys()))
+        topic_input = st.text_input("Topic", value="Se présenter et saluer / Greetings")
         duration = st.selectbox("Duration", ["30 min", "45 min", "60 min", "90 min"])
 
         st.markdown("---")
         st.markdown("### 🏡 Context & Environment")
         community_context = st.text_area(
             "Classroom & Community Context",
-            placeholder="e.g., Rural farming community, large class size (50+ students), mixed-ability learners, limited internet access.",
+            placeholder="Describe class environment/community (e.g., Rural farming area, 50+ students, mixed ability, limited electricity).",
             height=90
         )
         
@@ -255,9 +292,10 @@ if nav_choice == "📝 Lesson Plan Generator":
                         lang_instruction = "Write the ENTIRE lesson plan strictly in FRENCH language." if "Français" in plan_language else "Write the lesson plan in English."
                         
                         prompt = f"""
-                        You are an expert curriculum planner. Generate a comprehensive weekly lesson plan.
+                        You are an expert curriculum planner specializing in the Ghana NaCCA curriculum. Generate a comprehensive lesson plan.
                         
                         SETTINGS & CONTEXT:
+                        - Curriculum Type: {programme_type}
                         - Target Output Language: {plan_language} ({lang_instruction})
                         - Subject: {subject}
                         - Strand: {strand}
@@ -269,6 +307,7 @@ if nav_choice == "📝 Lesson Plan Generator":
                         INSTRUCTIONS:
                         1. Structure into 3 clear phases: Starter (Warm-up), Main Learning Activities, and Reflection/Assessment.
                         2. Actively adapt activities and teaching aids to match the provided Community Context and Classroom Environment.
+                        3. For JHS/CCP subjects, ensure each period or day is handled with subject-specific depth.
                         """
                         
                         res = call_gemini_with_retry(client, prompt)
@@ -277,7 +316,6 @@ if nav_choice == "📝 Lesson Plan Generator":
                     except Exception as e:
                         st.error(f"Error: {str(e)}")
 
-    # Middle Column: Preview & Edit Area
     with col_middle:
         st.markdown("### Lesson Preview & Edit")
         plan_content = st.session_state.get("current_plan", "Select details on the left and click 'Generate Draft' to create your lesson plan preview here.")
@@ -289,22 +327,23 @@ if nav_choice == "📝 Lesson Plan Generator":
         with c_btn2:
             st.button("📤 Export Plan")
 
-    # Right Column: AI Suggestions
     with col_right:
-        st.markdown("### AI Suggestions")
+        st.markdown("### AI Context Suggestions")
         st.markdown("""
         <div class="dashboard-card">
-            <strong>💡 Environmental Adaptation</strong><br>
-            <small>Incorporating rural or urban community references increases student engagement by up to 40%.</small>
+            <strong>💡 Community Adaptation</strong><br>
+            <small>Contextualizing lessons with rural or urban community details builds stronger student connections.</small>
         </div>
         <div class="dashboard-card">
             <strong>🗣️ French Immersion Tip</strong><br>
-            <small>Use TPR (Total Physical Response) gestures alongside French audio prompts for beginner classes.</small>
+            <small>Use TPR (Total Physical Response) gestures alongside French spoken instructions for beginner learners.</small>
         </div>
         """, unsafe_allow_html=True)
 
-# --- PAGE 2: DIFFERENTIATED TASKS & QUIZZES ---
-elif nav_choice == "🎯 Differentiated Tasks & Quizzes":
+# ------------------------------------------
+# TAB 2: DIFFERENTIATED TASKS & QUIZZES
+# ------------------------------------------
+with tab_diff:
     st.subheader("🎯 Differentiated Student Tasks & Quizzes")
     diff_lang = st.radio("Task Language", ["English 🇬🇧", "Français 🇫🇷"], horizontal=True)
     diff_topic = st.text_input("Topic or Concept", placeholder="e.g., Les articles définis et indéfinis or Fractions")
@@ -321,8 +360,10 @@ elif nav_choice == "🎯 Differentiated Tasks & Quizzes":
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
 
-# --- PAGE 3: IMPROVISED TLMs & VISUALS ---
-elif nav_choice == "🎨 Improvised TLMs & Visuals":
+# ------------------------------------------
+# TAB 3: IMPROVISED TLMs & VISUALS
+# ------------------------------------------
+with tab_tlm:
     st.subheader("🎨 Improvised Teaching Materials & Visual Aids")
     tlm_topic = st.text_input("Topic for Visual Aid", placeholder="e.g., Objects in the classroom (Les objets de la classe)")
     
@@ -336,11 +377,3 @@ elif nav_choice == "🎨 Improvised TLMs & Visuals":
                     st.markdown(res.text)
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
-
-# --- PAGE 4: FAQ ---
-elif nav_choice == "❓ FAQ":
-    st.subheader("❓ Frequently Asked Questions")
-    with st.expander("Can I generate entire lesson plans in French?"):
-        st.write("Yes! Select 'Français 🇫🇷' in the Output Language dropdown on the Lesson Plan Generator tab, and all generated objectives, steps, and assessments will be created in French.")
-    with st.expander("How does the Community Context option work?"):
-        st.write("Entering details like class size, rural/urban setting, or resource availability instructs the AI to propose activities and materials that match your specific school environment.")
