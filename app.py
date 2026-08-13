@@ -456,46 +456,4 @@ with tab_tlm:
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
 
-# ==========================================
-# TAB 4: INTERACTIVE FAQ & TEACHER HELP
-# ==========================================
-with tab_faq:
-    st.subheader("❓ Frequently Asked Questions")
-    st.write("Find quick answers to common questions about using My T.A.")
-    
-    with st.expander("🔑 How do I get my free Gemini API key?"):
-        st.write("""
-        1. Visit [Google AI Studio](https://aistudio.google.com/).
-        2. Sign in with your standard Google Account.
-        3. Click **"Create API Key"** and copy the string of characters.
-        4. Paste it on the My T.A. login screen.
-        """)
-        
-    with st.expander("🇬🇭 Does My T.A. align with the NaCCA curriculum?"):
-        st.write("Yes! My T.A. is specifically trained on the Ghanaian National Council for Curriculum and Assessment (NaCCA) standard-based curriculum for Primary (Basic 1–6) and Common Core Programme (CCP) for JHS (Basic 7–9).")
 
-    with st.expander("📲 Can I automatically receive lesson plans on WhatsApp?"):
-        st.write("We are currently rolling out the **Sunday WhatsApp Automation** feature! You will soon be able to upload your term's Scheme of Learning and get weekly plans dropped straight into your WhatsApp every Sunday evening.")
-
-    with st.expander("🖨️ How do I print or save my lesson plans?"):
-        st.write("After generating a weekly lesson plan, click the **Download Word Document (.docx)** or **Download Printable PDF** buttons directly underneath the table!")
-
-    st.markdown("---")
-    st.subheader("💬 What Teachers Are Saying")
-    
-    col_t1, col_t2 = st.columns(2)
-    with col_t1:
-        st.markdown("""
-        <div class="testimonial-card">
-            <p style="margin:0; font-size:14px; color:#334155;"><em>"My T.A. reduced my lesson prep time on Sundays from 3 hours to less than 5 minutes. The NaCCA indicators and table structure are spot on!"</em></p>
-            <p style="margin-top:8px; font-weight:700; color:#0284C7; font-size:13px;">— Tr. Emmanuel, Basic 5 Teacher (Accra)</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    with col_t2:
-        st.markdown("""
-        <div class="testimonial-card">
-            <p style="margin:0; font-size:14px; color:#334155;"><em>"The differentiated exercises in Tab 2 are a lifesaver for handling fast learners and struggling pupils in the same classroom."</em></p>
-            <p style="margin-top:8px; font-weight:700; color:#0284C7; font-size:13px;">— Tr. Patience, JHS Science Teacher (Kumasi)</p>
-        </div>
-        """, unsafe_allow_html=True)
