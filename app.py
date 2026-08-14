@@ -597,13 +597,11 @@ if nav_choice == "📝 Lesson Plan Generator":
       "Fill in the details above and click 'Generate Draft' to create your"
       " lesson plan in table format here.",
   )
-    # PDF & Word Export Options
+        # --- Export Options ---
     st.markdown("#### 📥 Export Options")
     
-    # 1. First, create the columns
     btn_c1, btn_c2 = st.columns(2)
-    
-    # 2. Then, use them in the 'with' blocks
+
     with btn_c1:
         pdf_buffer = create_valid_pdf(edited_plan)
         st.download_button(
@@ -621,6 +619,6 @@ if nav_choice == "📝 Lesson Plan Generator":
             file_name=f"Lesson_Plan_{subject}_{grade_level}.doc",
             mime="application/msword",
             use_container_width=True
-)
-      
+        )
+
   
