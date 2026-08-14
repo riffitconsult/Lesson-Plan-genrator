@@ -83,7 +83,7 @@ def call_gemini_with_retry(client, prompt, max_retries=3):
     for attempt in range(max_retries):
         try:
             return client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-3.6-flash',
                 contents=prompt
             )
         except Exception as e:
@@ -191,6 +191,7 @@ CURRICULUM_DATA = {
 }
 
 CLASS_LEVELS = ["Basic 1", "Basic 2", "Basic 3", "Basic 4", "Basic 5", "Basic 6", "Basic 7 (JHS 1)", "Basic 8 (JHS 2)", "Basic 9 (JHS 3)"]
+DAYS_OPTIONS = ["All Days (Full Week)", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
 
 # ==========================================
 # 5. LOGIN SCREEN
@@ -219,7 +220,6 @@ with st.sidebar:
     st.caption(f"Logged in: {st.session_state['teacher_name']}")
     st.divider()
 
-    # Core navigation options (FAQ removed)
     nav_choice = st.radio(
         "NAVIGATION",
         [
@@ -283,7 +283,15 @@ if nav_choice == "📝 Lesson Plan Generator":
         subject = st.selectbox("Subject", list(CURRICULUM_DATA[programme_type].keys()))
         strand = st.selectbox("Strand", list(CURRICULUM_DATA[programme_type][subject].keys()))
         topic_input = st.text_input("Topic", value="Se présenter et saluer / Greetings")
-        duration = st.selectbox("Duration", ["30 min", "45 min", "60 min", "90 min"])
+        
+        # Day Selection Options
+        selected_days = st.multiselect(
+            "📅 Select Day(s)", 
+            DAYS_OPTIONS, 
+            default=["All Days (Full Week)"]
+        )
+        
+        duration = st.selectbox("Duration per session", ["30 min", "45 min", "60 min", "90 min"])
 
         st.markdown("---")
         st.markdown("### 🏡 Context & Environment")
@@ -295,34 +303,41 @@ if nav_choice == "📝 Lesson Plan Generator":
         
         if st.button("🚀 Generate Draft"):
             if topic_input:
-                with st.spinner("Generating customized lesson plan..."):
-                    try:
-                        client = genai.Client(api_key=st.session_state["api_key"])
-                        lang_instruction = "Write the ENTIRE lesson plan strictly in FRENCH language." if "Français" in plan_language else "Write the lesson plan in English."
-                        
-                        prompt = f"""
-                        You are an expert curriculum planner. Generate a comprehensive lesson plan.
-                        
-                        SETTINGS & CONTEXT:
-                        - Curriculum Type: {programme_type}
-                        - Target Output Language: {plan_language} ({lang_instruction})
-                        - Subject: {subject}
-                        - Strand: {strand}
-                        - Topic: {topic_input}
-                        - Class Level: {grade_level}
-                        - Duration: {duration}
-                        - Classroom Environment & Community Context: {community_context if community_context else 'Standard classroom setup'}
-                        
-                        INSTRUCTIONS:
-                        1. Structure into 3 clear phases: Starter (Warm-up), Main Learning Activities, and Reflection/Assessment.
-                        2. Actively adapt activities and teaching aids to match the provided Community Context and Classroom Environment.
-                        """
-                        
-                        res = call_gemini_with_retry(client, prompt)
-                        st.session_state["current_plan"] = res.text
-                        st.session_state["history"].append({"title": f"{subject}: {topic_input} ({plan_language})"})
-                    except Exception as e:
-                        st.error(f"Error: {str(e)}")
+                if not selected_days:
+                    st.error("Please select at least one day or 'All Days'.")
+                else:
+                    with st.spinner("Generating customized lesson plan..."):
+                        try:
+                            client = genai.Client(api_key=st.session_state["api_key"])
+                            lang_instruction = "Write the ENTIRE lesson plan strictly in FRENCH language." if "Français" in plan_language else "Write the lesson plan in English."
+                            
+                            days_formatted = "All Days (Monday to Friday)" if "All Days (Full Week)" in selected_days else ", ".join(selected_days)
+                            
+                            prompt = f"""
+                            You are an expert curriculum planner. Generate a comprehensive lesson plan.
+                            
+                            SETTINGS & CONTEXT:
+                            - Curriculum Type: {programme_type}
+                            - Target Output Language: {plan_language} ({lang_instruction})
+                            - Subject: {subject}
+                            - Strand: {strand}
+                            - Topic: {topic_input}
+                            - Class Level: {grade_level}
+                            - Target Day(s): {days_formatted}
+                            - Duration per session: {duration}
+                            - Classroom Environment & Community Context: {community_context if community_context else 'Standard classroom setup'}
+                            
+                            INSTRUCTIONS:
+                            1. Structure the lesson plan specifically for the requested day(s) ({days_formatted}). If multiple days or full week are selected, break down the progression day by day.
+                            2. For each day, structure into 3 clear phases: Starter (Warm-up), Main Learning Activities, and Reflection/Assessment.
+                            3. Actively adapt activities and teaching aids to match the provided Community Context and Classroom Environment.
+                            """
+                            
+                            res = call_gemini_with_retry(client, prompt)
+                            st.session_state["current_plan"] = res.text
+                            st.session_state["history"].append({"title": f"{subject}: {topic_input} ({days_formatted})"})
+                        except Exception as e:
+                            st.error(f"Error: {str(e)}")
 
     with col_middle:
         st.markdown("### Lesson Preview & Edit")
@@ -339,12 +354,12 @@ if nav_choice == "📝 Lesson Plan Generator":
         st.markdown("### AI Suggestions")
         st.markdown("""
         <div class="dashboard-card">
-            <strong>💡 Community Context</strong><br>
-            <small>Lessons tailored to the learners' local community improve comprehension and real-world application.</small>
+            <strong>📅 Flexible Scheduling</strong><br>
+            <small>Generating per specific day helps substitute teachers or single-period subjects follow easily.</small>
         </div>
         <div class="dashboard-card">
-            <strong>🗣️ French Immersion Tip</strong><br>
-            <small>Use TPR (Total Physical Response) gestures alongside French spoken instructions for beginner classes.</small>
+            <strong>💡 Community Context</strong><br>
+            <small>Lessons tailored to the learners' local community improve comprehension and real-world application.</small>
         </div>
         """, unsafe_allow_html=True)
 
