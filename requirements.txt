@@ -1,5 +1,6 @@
 streamlit
 google-genai
+reportlab
 python-pptx
 python-docx
 weasyprint
