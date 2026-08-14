@@ -46,14 +46,14 @@ st.markdown("""
         font-weight: 500;
     }
 
-    /* Custom Dashboard Card */
-    .dashboard-card {
+    /* Custom Card Containers */
+    .section-card {
         background-color: #FFFFFF;
-        padding: 18px;
+        padding: 24px;
         border-radius: 12px;
         border: 1px solid #E2E8F0;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        margin-bottom: 16px;
+        margin-bottom: 24px;
     }
 
     /* Button Styling */
@@ -260,14 +260,15 @@ st.markdown(f"""
 # --- PAGE 1: LESSON PLAN GENERATOR ---
 if nav_choice == "📝 Lesson Plan Generator":
     
-    col_left, col_middle, col_right = st.columns([1.2, 1.5, 1])
+    # --- TOP SECTION: LESSON DETAILS INPUTS ---
+    st.markdown("### Step 1: Lesson Details")
+    
+    col_1, col_2 = st.columns(2)
 
-    with col_left:
-        st.markdown("### Step 1: Lesson Details")
-        
+    with col_1:
         plan_language = st.selectbox(
             "🌐 Output Language", 
-            ["English 🇬🇧", "Français 🇫🇷 (French)", "English with French Terminology"]
+            ["English 🇬🇧", "Français 🇫🇷 (French)"]
         )
 
         grade_level = st.selectbox("Grade Level", CLASS_LEVELS)
@@ -281,10 +282,11 @@ if nav_choice == "📝 Lesson Plan Generator":
             st.info("📋 Framework: Standard Base-Curriculum")
 
         subject = st.selectbox("Subject", list(CURRICULUM_DATA[programme_type].keys()))
+
+    with col_2:
         strand = st.selectbox("Strand", list(CURRICULUM_DATA[programme_type][subject].keys()))
-        topic_input = st.text_input("Topic", value="Se présenter et saluer / Greetings")
+        topic_input = st.text_input("Topic", value="Greetings")
         
-        # Day Selection Options
         selected_days = st.multiselect(
             "📅 Select Day(s)", 
             DAYS_OPTIONS, 
@@ -293,75 +295,79 @@ if nav_choice == "📝 Lesson Plan Generator":
         
         duration = st.selectbox("Duration per session", ["30 min", "45 min", "60 min", "90 min"])
 
-        st.markdown("---")
-        st.markdown("### 🏡 Context & Environment")
-        community_context = st.text_area(
-            "Classroom & Community Context",
-            placeholder="Describe class environment or community (e.g., Rural farming area, 50+ students, mixed ability, limited electricity).",
-            height=90
+    st.markdown("### 🏡 Context & Environment")
+    community_context = st.text_area(
+        "Classroom & Community Context",
+        placeholder="Describe class environment or community (e.g., Rural farming area, 50+ students, mixed ability, limited electricity).",
+        height=80
+    )
+    
+    if st.button("🚀 Generate Draft"):
+        if topic_input:
+            if not selected_days:
+                st.error("Please select at least one day or 'All Days'.")
+            else:
+                with st.spinner("Generating customized lesson plan..."):
+                    try:
+                        client = genai.Client(api_key=st.session_state["api_key"])
+                        lang_instruction = "Write the ENTIRE lesson plan strictly in FRENCH language." if "Français" in plan_language else "Write the lesson plan in English."
+                        
+                        days_formatted = "All Days (Monday to Friday)" if "All Days (Full Week)" in selected_days else ", ".join(selected_days)
+                        
+                        prompt = f"""
+                        You are an expert curriculum planner. Generate a comprehensive lesson plan.
+                        
+                        SETTINGS & CONTEXT:
+                        - Curriculum Type: {programme_type}
+                        - Target Output Language: {plan_language} ({lang_instruction})
+                        - Subject: {subject}
+                        - Strand: {strand}
+                        - Topic: {topic_input}
+                        - Class Level: {grade_level}
+                        - Target Day(s): {days_formatted}
+                        - Duration per session: {duration}
+                        - Classroom Environment & Community Context: {community_context if community_context else 'Standard classroom setup'}
+                        
+                        INSTRUCTIONS:
+                        1. Structure the lesson plan specifically for the requested day(s) ({days_formatted}). If multiple days or full week are selected, break down the progression day by day.
+                        2. For each day, structure into 3 clear phases: Starter (Warm-up), Main Learning Activities, and Reflection/Assessment.
+                        3. Actively adapt activities and teaching aids to match the provided Community Context and Classroom Environment.
+                        """
+                        
+                        res = call_gemini_with_retry(client, prompt)
+                        st.session_state["current_plan"] = res.text
+                        st.session_state["history"].append({"title": f"{subject}: {topic_input} ({days_formatted})"})
+                    except Exception as e:
+                        st.error(f"Error: {str(e)}")
+
+    st.divider()
+
+    # --- BOTTOM SECTION: LESSON PREVIEW & EDIT (FULL WIDTH BELOW) ---
+    st.markdown("### 📄 Lesson Preview & Edit")
+    plan_content = st.session_state.get("current_plan", "Fill in the details above and click 'Generate Draft' to create your lesson plan here.")
+    edited_plan = st.text_area("Drafting Area", value=plan_content, height=520)
+    
+    # Functional Download/Export Options
+    st.markdown("#### 📥 Export / Download Options")
+    btn_col1, btn_col2, btn_col3 = st.columns([1, 1, 2])
+    
+    with btn_col1:
+        st.download_button(
+            label="📄 Download as Doc (TXT/DOC)",
+            data=edited_plan,
+            file_name=f"Lesson_Plan_{subject}_{grade_level}.doc",
+            mime="application/msword",
+            use_container_width=True
         )
         
-        if st.button("🚀 Generate Draft"):
-            if topic_input:
-                if not selected_days:
-                    st.error("Please select at least one day or 'All Days'.")
-                else:
-                    with st.spinner("Generating customized lesson plan..."):
-                        try:
-                            client = genai.Client(api_key=st.session_state["api_key"])
-                            lang_instruction = "Write the ENTIRE lesson plan strictly in FRENCH language." if "Français" in plan_language else "Write the lesson plan in English."
-                            
-                            days_formatted = "All Days (Monday to Friday)" if "All Days (Full Week)" in selected_days else ", ".join(selected_days)
-                            
-                            prompt = f"""
-                            You are an expert curriculum planner. Generate a comprehensive lesson plan.
-                            
-                            SETTINGS & CONTEXT:
-                            - Curriculum Type: {programme_type}
-                            - Target Output Language: {plan_language} ({lang_instruction})
-                            - Subject: {subject}
-                            - Strand: {strand}
-                            - Topic: {topic_input}
-                            - Class Level: {grade_level}
-                            - Target Day(s): {days_formatted}
-                            - Duration per session: {duration}
-                            - Classroom Environment & Community Context: {community_context if community_context else 'Standard classroom setup'}
-                            
-                            INSTRUCTIONS:
-                            1. Structure the lesson plan specifically for the requested day(s) ({days_formatted}). If multiple days or full week are selected, break down the progression day by day.
-                            2. For each day, structure into 3 clear phases: Starter (Warm-up), Main Learning Activities, and Reflection/Assessment.
-                            3. Actively adapt activities and teaching aids to match the provided Community Context and Classroom Environment.
-                            """
-                            
-                            res = call_gemini_with_retry(client, prompt)
-                            st.session_state["current_plan"] = res.text
-                            st.session_state["history"].append({"title": f"{subject}: {topic_input} ({days_formatted})"})
-                        except Exception as e:
-                            st.error(f"Error: {str(e)}")
-
-    with col_middle:
-        st.markdown("### Lesson Preview & Edit")
-        plan_content = st.session_state.get("current_plan", "Select details on the left and click 'Generate Draft' to create your lesson plan preview here.")
-        edited_plan = st.text_area("Drafting Area", value=plan_content, height=520)
-        
-        c_btn1, c_btn2 = st.columns(2)
-        with c_btn1:
-            st.button("💾 Save Plan")
-        with c_btn2:
-            st.button("📤 Export Plan")
-
-    with col_right:
-        st.markdown("### AI Suggestions")
-        st.markdown("""
-        <div class="dashboard-card">
-            <strong>📅 Flexible Scheduling</strong><br>
-            <small>Generating per specific day helps substitute teachers or single-period subjects follow easily.</small>
-        </div>
-        <div class="dashboard-card">
-            <strong>💡 Community Context</strong><br>
-            <small>Lessons tailored to the learners' local community improve comprehension and real-world application.</small>
-        </div>
-        """, unsafe_allow_html=True)
+    with btn_col2:
+        st.download_button(
+            label="📝 Download as Text (TXT)",
+            data=edited_plan,
+            file_name=f"Lesson_Plan_{subject}_{grade_level}.txt",
+            mime="text/plain",
+            use_container_width=True
+        )
 
 # --- PAGE 2: DIFFERENTIATED TASKS & QUIZZES ---
 elif nav_choice == "🎯 Differentiated Tasks & Quizzes":
@@ -396,3 +402,4 @@ elif nav_choice == "🎨 Improvised TLMs & Visuals":
                     st.markdown(res.text)
                 except Exception as e:
                     st.error(f"Error: {str(e)}")
+        
