@@ -598,7 +598,7 @@ if nav_choice == "📝 Lesson Plan Generator":
       " lesson plan in table format here.",
   )
         # --- Export Options ---
-    st.markdown("#### 📥 Export Options")
+    st.markdown("### 📥 Export Options")
     
     btn_c1, btn_c2 = st.columns(2)
 
