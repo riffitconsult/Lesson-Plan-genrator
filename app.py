@@ -599,4 +599,6 @@ if nav_choice == "📝 Lesson Plan Generator":
   )
 
   # Markdown rendered view for table preview
-  with
+  withwith btn_c1:
+    pdf_buffer = create_valid_pdf(edited_plan)
+  
