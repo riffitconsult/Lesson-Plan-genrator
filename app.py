@@ -268,7 +268,7 @@ if nav_choice == "📝 Lesson Plan Generator":
     with col_1:
         plan_language = st.selectbox(
             "🌐 Output Language", 
-            ["English 🇬🇧", "Français 🇫🇷 (French)"]
+            ["English ", " French"]
         )
 
         grade_level = st.selectbox("Grade Level", CLASS_LEVELS)
@@ -322,6 +322,7 @@ if nav_choice == "📝 Lesson Plan Generator":
                         - Target Output Language: {plan_language} ({lang_instruction})
                         - Subject: {subject}
                         - Strand: {strand}
+                        - Sub-strand: {sub-strand}
                         - Topic: {topic_input}
                         - Class Level: {grade_level}
                         - Target Day(s): {days_formatted}
